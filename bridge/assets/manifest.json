@@ -1,0 +1,35 @@
+{
+  "source_commit": "4c9ad7ff8c8ad640a827525b3512ca544572e9ca",
+  "format": "WHP2-RGB565-A8",
+  "alpha_levels": 16,
+  "layout": {
+    "mode": "shared-source-viewport",
+    "source_size": [
+      640,
+      360
+    ],
+    "crop": [
+      84,
+      20,
+      560,
+      344
+    ],
+    "scale": 0.4117647058823529,
+    "sprite_size": [
+      196,
+      133
+    ],
+    "origin": [
+      6,
+      31,
+      202,
+      164
+    ]
+  },
+  "width": 208,
+  "height": 196,
+  "fps": 12,
+  "core_manifest_sha256": "f18ff458d053d4a165381fac65ba7433c03fbf8231c544e9bcf4622dbe12b479",
+  "clips": 81,
+  "bytes": 94310809
+}

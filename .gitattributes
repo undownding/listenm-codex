@@ -1,0 +1,14 @@
+* text=auto
+*.sh text eol=lf
+*.py text eol=lf
+*.js text eol=lf
+*.c text eol=lf
+*.h text eol=lf
+*.md text eol=lf
+*.bin binary
+*.rgb565 binary
+*.png binary
+*.gif binary
+*.pdf binary
+# Preserve official downloaded source bytes for SHA-256 provenance.
+bridge/data/calendar/sources/*.txt -text -whitespace

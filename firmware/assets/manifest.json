@@ -1,0 +1,92 @@
+{
+  "source_commit": "4c9ad7ff8c8ad640a827525b3512ca544572e9ca",
+  "format": "WHP2-RGB565-A8",
+  "alpha_levels": 16,
+  "width": 208,
+  "height": 196,
+  "fps": 12,
+  "layout": {
+    "mode": "shared-source-viewport",
+    "source_size": [
+      640,
+      360
+    ],
+    "crop": [
+      84,
+      20,
+      560,
+      344
+    ],
+    "scale": 0.4117647058823529,
+    "sprite_size": [
+      196,
+      133
+    ],
+    "origin": [
+      6,
+      31,
+      202,
+      164
+    ]
+  },
+  "bytes": 7994964,
+  "sha256": "33826b7dfdebcca4be1734f0f30aff281855773644ca25f449a9ceca40f85b9a",
+  "clips": [
+    {
+      "state": "idle",
+      "clip": "idle/breathing",
+      "frames": 120,
+      "fps": 12,
+      "palette": 0,
+      "source_sha256": "deb965d05a85dacf5ff4a20faa757846f0d11679598c3ec578a5571487660395"
+    },
+    {
+      "state": "thinking",
+      "clip": "work/deep_thought",
+      "frames": 120,
+      "fps": 12,
+      "palette": 1105997,
+      "source_sha256": "bc18db7a3882388bf77a42b64955fb50cf498c73a795ad20299f0440e0390a1a"
+    },
+    {
+      "state": "working",
+      "clip": "work/coding",
+      "frames": 120,
+      "fps": 12,
+      "palette": 2416306,
+      "source_sha256": "0441287737cdbb993ce90dfa74c67ea4ea3549d8c8ea98946604668464589ed7"
+    },
+    {
+      "state": "speaking",
+      "clip": "clicks/cheerful_wave",
+      "frames": 120,
+      "fps": 12,
+      "palette": 3515036,
+      "source_sha256": "48cd729ccdcf746369942ea954d242e9afdd5643e1dac3827fa5e67450eb8776"
+    },
+    {
+      "state": "attention",
+      "clip": "daily/attentive_listening",
+      "frames": 120,
+      "fps": 12,
+      "palette": 4637663,
+      "source_sha256": "770d5c56e4bc1e68260e52a6705e0a5c65c0446424ab19b5445812c3e5dc3aae"
+    },
+    {
+      "state": "sleeping",
+      "clip": "daily/quick_nap",
+      "frames": 120,
+      "fps": 12,
+      "palette": 5762276,
+      "source_sha256": "31d4a6b36a29b2a4fe097384173d3bbeb3fa2f40f526b13191791456bf7507a1"
+    },
+    {
+      "state": "error",
+      "clip": "fun/jump_scare",
+      "frames": 120,
+      "fps": 12,
+      "palette": 6876011,
+      "source_sha256": "537dde496e0f776e775dec1bb7bfe3fbc5eebf89112469a1a910ad0433ccde66"
+    }
+  ]
+}

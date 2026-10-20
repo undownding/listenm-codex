@@ -1,0 +1,27 @@
+{
+  "generated_on": "2026-10-20",
+  "generator": "OpenAI image generation",
+  "display_size": [
+    240,
+    240
+  ],
+  "pixel_format": "rgb565le",
+  "firmware_enabled": true,
+  "files": [
+    {
+      "path": "assets/backgrounds/whale-undersea.png",
+      "bytes": 1705648,
+      "sha256": "2a97b05025e362c28d2841b54c944d27a56f234d38b9fa1b726412b6bdf19dc4"
+    },
+    {
+      "path": "assets/backgrounds/whale-undersea-240.png",
+      "bytes": 106843,
+      "sha256": "34b0d3f39121ee3271571ed70e7d8436fcfe60eb62ff26b69f4949b4e86969ab"
+    },
+    {
+      "path": "firmware/assets/background.rgb565",
+      "bytes": 115200,
+      "sha256": "2ef723802d6a6f0f8e2a0aa51677b9980f08758e356430c19976fdcf1dbd8f0a"
+    }
+  ]
+}

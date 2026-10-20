@@ -1,0 +1,569 @@
+[
+  {
+    "id": "arrival_wave",
+    "category": "clicks",
+    "frames": 120,
+    "bytes": 1119694,
+    "sha256": "8a0fa53ce20e7fc8de341042129123818ca9caf909a5dc4e1ff800e73292023f"
+  },
+  {
+    "id": "happy_hop",
+    "category": "clicks",
+    "frames": 120,
+    "bytes": 1135382,
+    "sha256": "b328b7eecf917a3de9d949c73382dcf661191a8cf4ca315ba2f586b24f00655c"
+  },
+  {
+    "id": "shy_surprise",
+    "category": "clicks",
+    "frames": 120,
+    "bytes": 1101494,
+    "sha256": "8d56c300cedff0e0432c29e41045567a6c7b32f017037e20ca88786b17d20d78"
+  },
+  {
+    "id": "ticklish_giggle",
+    "category": "clicks",
+    "frames": 120,
+    "bytes": 1105830,
+    "sha256": "4a81e1662d7e8e12f52977cfb644c8850e6e03fa361339aba851b109f5aacc16"
+  },
+  {
+    "id": "tsundere_pout",
+    "category": "clicks",
+    "frames": 120,
+    "bytes": 1005544,
+    "sha256": "c6e8fb2ef81819d038d8805f673a8df0e208bee1095464ab9fa578513b3eb5ea"
+  },
+  {
+    "id": "big_stretch",
+    "category": "daily",
+    "frames": 120,
+    "bytes": 1106494,
+    "sha256": "a7d7c060dfa06c436948827fed98ff67829d7a5a91ca4225c4e74848db9a3d7b"
+  },
+  {
+    "id": "gentle_spin",
+    "category": "daily",
+    "frames": 120,
+    "bytes": 1082207,
+    "sha256": "0715d17096ded04ff83941b99cff49a55efac13946e913c54a371663c0b01f05"
+  },
+  {
+    "id": "maid_curtsy",
+    "category": "daily",
+    "frames": 120,
+    "bytes": 1069208,
+    "sha256": "03193fcb95bab83724bfbf909a6d5f94726fc39352f7b60975b342f69c889878"
+  },
+  {
+    "id": "mirror_check",
+    "category": "daily",
+    "frames": 120,
+    "bytes": 1111832,
+    "sha256": "63242d266d3e85c4d3571bfe4119a653513907d3ac7d2e49a2ecb695ed88b37f"
+  },
+  {
+    "id": "morning_brushing",
+    "category": "daily",
+    "frames": 120,
+    "bytes": 1147727,
+    "sha256": "666e4ca3c771084a76120f822a8f580443ac80a91bde87dff6a42ca72ea17937"
+  },
+  {
+    "id": "outfit_color_try_on",
+    "category": "daily",
+    "frames": 120,
+    "bytes": 1077605,
+    "sha256": "9b57e2f7a75971ad2bdcea0253fb935681877e22e3931e7566095148a993dc0c"
+  },
+  {
+    "id": "sleepy_yawn",
+    "category": "daily",
+    "frames": 120,
+    "bytes": 1125470,
+    "sha256": "6501965c3bc2262b2bd7eff8f87016d9ddfb072017f36dd37f0fbe5536057f7f"
+  },
+  {
+    "id": "startled_awake",
+    "category": "daily",
+    "frames": 120,
+    "bytes": 1096168,
+    "sha256": "d16a370dea1f8849f734fc2a3eac0211a39f578f6d332279f0ea93bd5dba0b3b"
+  },
+  {
+    "id": "chongyang_chrysanthemums",
+    "category": "festivals",
+    "frames": 120,
+    "bytes": 1103118,
+    "sha256": "f6b4b62b1312b6e6ed94e46df3e554e3116f4d2dbd42b32d7998106e57896c34"
+  },
+  {
+    "id": "cute_little_ghost",
+    "category": "festivals",
+    "frames": 120,
+    "bytes": 1108048,
+    "sha256": "33aa85ddc7f1a4b3f7c102335dd0bdf18035d29fca93134e769ce0f6164c657e"
+  },
+  {
+    "id": "decorating_a_christmas_tree",
+    "category": "festivals",
+    "frames": 120,
+    "bytes": 1619825,
+    "sha256": "d551fce9b2a78a52eaf4dc97615b7486b1cae0610866c0f775f1ef3121cb05bf"
+  },
+  {
+    "id": "eating_chongyang_cake",
+    "category": "festivals",
+    "frames": 120,
+    "bytes": 1098938,
+    "sha256": "43d27fb209e4fe20632e2c81d5c0429b7660b729fb2d51694c12251a11b0708c"
+  },
+  {
+    "id": "eating_dumplings",
+    "category": "festivals",
+    "frames": 120,
+    "bytes": 1172408,
+    "sha256": "defc0e047e6dcf34eaf02838b99895817a6b51a24d4efc3ede51e69b70708a08"
+  },
+  {
+    "id": "eating_laba_congee",
+    "category": "festivals",
+    "frames": 120,
+    "bytes": 1094225,
+    "sha256": "04d711e798313210d918738cf49f9b837e941decdc2a615bfa78e415d3eeadc7"
+  },
+  {
+    "id": "eating_qingtuan",
+    "category": "festivals",
+    "frames": 120,
+    "bytes": 1109948,
+    "sha256": "d395632ae8488be4708909548e8fa4fc9afd9831246a6b7a1017c9cae528e8c2"
+  },
+  {
+    "id": "eating_rice_cake",
+    "category": "festivals",
+    "frames": 120,
+    "bytes": 1105941,
+    "sha256": "009b696b3ef3c32c860c3e89701d54f245bd01b01da8724cd40f3ca2c363578c"
+  },
+  {
+    "id": "eating_tangyuan",
+    "category": "festivals",
+    "frames": 120,
+    "bytes": 1105828,
+    "sha256": "e3d483d9afed645dba18efabc8113cd8df50596b6feb9258c8644b387b9e387c"
+  },
+  {
+    "id": "eating_zongzi",
+    "category": "festivals",
+    "frames": 120,
+    "bytes": 1125160,
+    "sha256": "37482d7bb999bd8f14cdead575f7248f171957d67780b186404b16a88d602b37"
+  },
+  {
+    "id": "halloween_trick_or_treat",
+    "category": "festivals",
+    "frames": 120,
+    "bytes": 1125400,
+    "sha256": "17cfc051b9cda35933b72954c676d011eb394c2657bcf90b282c7c109e919d61"
+  },
+  {
+    "id": "lion_dance",
+    "category": "festivals",
+    "frames": 120,
+    "bytes": 1152812,
+    "sha256": "43cb693cd08fe28ccb7e58fc1510e2c294530d9140450a661e81ed35ead2b7e4"
+  },
+  {
+    "id": "moon_festival",
+    "category": "festivals",
+    "frames": 120,
+    "bytes": 1234695,
+    "sha256": "98c43249739ef5df85964b4a6c4a1dd7d090d14b42f50926ba845784bad8ce4b"
+  },
+  {
+    "id": "opening_a_gift",
+    "category": "festivals",
+    "frames": 120,
+    "bytes": 1126255,
+    "sha256": "db0ae656bdef51cab8bf94702349335012ef037843d158c25476cfb8d47a6125"
+  },
+  {
+    "id": "qixi_needlework",
+    "category": "festivals",
+    "frames": 120,
+    "bytes": 1202836,
+    "sha256": "f2b8673c698b34f8dce80d829e2762a05763acc912914a0b8fd413097ea6d656"
+  },
+  {
+    "id": "receiving_a_red_envelope",
+    "category": "festivals",
+    "frames": 120,
+    "bytes": 1106627,
+    "sha256": "99aefd39bd76fe29190939510ccf9b338de3e21b7e63049cc3d983332422859c"
+  },
+  {
+    "id": "releasing_a_river_lantern",
+    "category": "festivals",
+    "frames": 120,
+    "bytes": 1093561,
+    "sha256": "b1dbf95710d5a3ce69e6a906fb787494a7378423dc63360deea336ef55311ba1"
+  },
+  {
+    "id": "releasing_a_sky_lantern",
+    "category": "festivals",
+    "frames": 120,
+    "bytes": 1244371,
+    "sha256": "2e2df3599fe4479ba2e6edbf88929779e4086281e2f014aee43c5e0aa8ce59b7"
+  },
+  {
+    "id": "setting_off_fireworks",
+    "category": "festivals",
+    "frames": 120,
+    "bytes": 1735331,
+    "sha256": "cf00521ace34e9db9a4a32a5cbf51a99eea86032ef3f2f929afbd03ac5708a19"
+  },
+  {
+    "id": "writing_the_fu_character",
+    "category": "festivals",
+    "frames": 120,
+    "bytes": 1117838,
+    "sha256": "4e58c5073b0a765228806348f036297961d53b0181e4cd560c39ce555b21832d"
+  },
+  {
+    "id": "caught_snacking",
+    "category": "food",
+    "frames": 120,
+    "bytes": 1133804,
+    "sha256": "5f93ea5e0b18a6a73b40908b6c207afd0e7fdbe08249273436691f6f76e9116b"
+  },
+  {
+    "id": "eating_breakfast",
+    "category": "food",
+    "frames": 120,
+    "bytes": 1101768,
+    "sha256": "e2743492e27e44a12998e899ef329d6f07556655fb6ada9c0b1cd82a8517f166"
+  },
+  {
+    "id": "eating_candied_haw",
+    "category": "food",
+    "frames": 120,
+    "bytes": 1113355,
+    "sha256": "0ffa0eff338e5481d18dda17873aa624822238dea7fa7c0a36598f357b5dfd5e"
+  },
+  {
+    "id": "eating_dinner",
+    "category": "food",
+    "frames": 120,
+    "bytes": 1469871,
+    "sha256": "86f52e800f3af667d08eb28d113865a42e01a2c8555395cd6237a43fdea14246"
+  },
+  {
+    "id": "eating_hairy_crab",
+    "category": "food",
+    "frames": 120,
+    "bytes": 1146195,
+    "sha256": "cff6ac429a204a5b26188c42f1014c46699879c7ac58072555c1018fe74b2085"
+  },
+  {
+    "id": "eating_hotpot",
+    "category": "food",
+    "frames": 120,
+    "bytes": 1151149,
+    "sha256": "0f0f9248234d22b67d89ba96a025da8b75adbb28fad8c098e5f2ef0c7f63fe5b"
+  },
+  {
+    "id": "eating_longevity_noodles",
+    "category": "food",
+    "frames": 120,
+    "bytes": 1119554,
+    "sha256": "e5d9259de859109b6b055f53ef83e1547ac8ec5ecf2308fcf4112ce13e47467d"
+  },
+  {
+    "id": "eating_lunch",
+    "category": "food",
+    "frames": 120,
+    "bytes": 1109483,
+    "sha256": "3921b29ae368a18b65d76c267b3bb4e9bfc9a24c53058c053dde58a005108bfe"
+  },
+  {
+    "id": "eating_rice",
+    "category": "food",
+    "frames": 120,
+    "bytes": 1107456,
+    "sha256": "026f9c90258043bbff2bc75fc5168d30d02aa99cc9af914213c75bf98d5294eb"
+  },
+  {
+    "id": "eating_snacks",
+    "category": "food",
+    "frames": 120,
+    "bytes": 1285920,
+    "sha256": "2c09b2874b708d79d5b3a4529704793602e93a0d96de5e622bf7b1448ad29763"
+  },
+  {
+    "id": "eating_watermelon",
+    "category": "food",
+    "frames": 120,
+    "bytes": 1123148,
+    "sha256": "a83b101ebc7286d1aab205c1dd3ea6fac1784a63d6263f0b11098c6e9ab4ca6f"
+  },
+  {
+    "id": "melting_ice_cream",
+    "category": "food",
+    "frames": 120,
+    "bytes": 1104444,
+    "sha256": "fa7d23f5a0413bbbb91344eb1dd0efe0a3d042317aeb26609495c82d13689ee5"
+  },
+  {
+    "id": "animal_parade",
+    "category": "fun",
+    "frames": 120,
+    "bytes": 1535626,
+    "sha256": "b69caac90cbcf155cf4660ababc6c42fb5cc7602845be77c65708ed11db087d7"
+  },
+  {
+    "id": "butterflies_and_blossoms",
+    "category": "fun",
+    "frames": 120,
+    "bytes": 1382597,
+    "sha256": "8cf9c83c1626a24e88a58358fb5b0b92edd9e0c0806fb68f0b984c01624242e6"
+  },
+  {
+    "id": "desk_tap",
+    "category": "fun",
+    "frames": 120,
+    "bytes": 1050925,
+    "sha256": "2fc6182dfbb92fadb5fee21935cf5250afe34d800c852f126cc3aca7d0ebbd65"
+  },
+  {
+    "id": "gravity_squash",
+    "category": "fun",
+    "frames": 120,
+    "bytes": 910889,
+    "sha256": "c9264ad6951316882e475722142718b0b852647a0c5d0d359628840ca5153fb8"
+  },
+  {
+    "id": "inflating_a_balloon",
+    "category": "fun",
+    "frames": 120,
+    "bytes": 1232370,
+    "sha256": "20a954494ce03a3e5bae8749f359bca23bb94d3d1f2ca50e9081311106138280"
+  },
+  {
+    "id": "jump_and_smash",
+    "category": "fun",
+    "frames": 120,
+    "bytes": 1122343,
+    "sha256": "1823061c8b5087c72922f055cdc767bca68b39bd23dde334ea6a421445b8c6ae"
+  },
+  {
+    "id": "petting_a_cat",
+    "category": "fun",
+    "frames": 120,
+    "bytes": 1123733,
+    "sha256": "e4ee4eb4e9524170b8cd2144198b04001b8635853ae7a26d435a2984a8dbe5b2"
+  },
+  {
+    "id": "three_ball_juggling",
+    "category": "fun",
+    "frames": 120,
+    "bytes": 1125402,
+    "sha256": "42c969ea412160fabf8db2758348ec7366e93507a70617c57ed4a6cb4dcaa294"
+  },
+  {
+    "id": "gaming_rage",
+    "category": "games",
+    "frames": 120,
+    "bytes": 1186366,
+    "sha256": "d7119ec561041b933e3c3101c8b9db48395d4899e27dabf3637563590c3241be"
+  },
+  {
+    "id": "kicking_a_shuttlecock",
+    "category": "games",
+    "frames": 120,
+    "bytes": 1122712,
+    "sha256": "939d3f21566d3f3feb30c494443d954852204ae8522af0d0d614fd76510e6ef3"
+  },
+  {
+    "id": "playground_swing",
+    "category": "games",
+    "frames": 120,
+    "bytes": 1213968,
+    "sha256": "597e44e577e162cbf988eb8501759688e587fdeb685724518285e750a26b9c9e"
+  },
+  {
+    "id": "playing_gomoku",
+    "category": "games",
+    "frames": 120,
+    "bytes": 1100180,
+    "sha256": "b1d87f8d6619c5e8d2807651547dd3ba50dc9abc508740761fae19613a3c8b6e"
+  },
+  {
+    "id": "playing_with_a_toy_car",
+    "category": "games",
+    "frames": 120,
+    "bytes": 1023456,
+    "sha256": "03871ed7fe507ed1e23c2fd86caa6fc9be0649f591898ca929cfb62a00a13b3f"
+  },
+  {
+    "id": "rocking_horse",
+    "category": "games",
+    "frames": 120,
+    "bytes": 1390708,
+    "sha256": "dcccea5e05764a8f1b69c47318f0197974f53ba46187f3e534a5792747b42e60"
+  },
+  {
+    "id": "solving_a_rubiks_cube",
+    "category": "games",
+    "frames": 120,
+    "bytes": 1112751,
+    "sha256": "65e10c6a731835e4a6f9de4a3eee2185381ab29fc2f637b75a898f59a7fdbec2"
+  },
+  {
+    "id": "spinning_a_top",
+    "category": "games",
+    "frames": 120,
+    "bytes": 1116573,
+    "sha256": "d759b56321397ee7e5fb4e04f0baee07c3551651314307c244a4b71714c554c4"
+  },
+  {
+    "id": "water_gun_play",
+    "category": "games",
+    "frames": 120,
+    "bytes": 1132622,
+    "sha256": "39b7ce39d0bf8b7f243d2970874686fd526a1844659ca05c9e099c6744663365"
+  },
+  {
+    "id": "card_magic",
+    "category": "magic",
+    "frames": 120,
+    "bytes": 1115561,
+    "sha256": "6aa8939bc53baef9525aa62add192f2ff8a438d3d4853eabdb4362b2c0da6660"
+  },
+  {
+    "id": "dove_magic",
+    "category": "magic",
+    "frames": 120,
+    "bytes": 1130025,
+    "sha256": "75813df985a0368cc18bf1a5a89ab063b93fe6ba653b1e98ff9ea4c19b68be3a"
+  },
+  {
+    "id": "flower_conjuring",
+    "category": "magic",
+    "frames": 120,
+    "bytes": 1147774,
+    "sha256": "5a09193493d3f85adab2dd24686fa6a9628ff4b4ac2eb4f8fdef58babb2958c1"
+  },
+  {
+    "id": "eating_tokens",
+    "category": "memes",
+    "frames": 120,
+    "bytes": 1218214,
+    "sha256": "537ed2018fcd6bf74494e20f9c3ea90018e26c120cd7baa6943c2a7df2f1ab00"
+  },
+  {
+    "id": "yeah_what_should_we_eat",
+    "category": "memes",
+    "frames": 120,
+    "bytes": 1486216,
+    "sha256": "abbb6223a861e8ff257b2ffc492304235d86980fa8592ad224d641c2d0a71075"
+  },
+  {
+    "id": "carefree_humming",
+    "category": "music",
+    "frames": 120,
+    "bytes": 1166359,
+    "sha256": "1074a4f4d5f1976672dc6f15bbdced2fedb3bae81dc585e6ef093fdcb296a9c7"
+  },
+  {
+    "id": "cute_otaku_dance",
+    "category": "music",
+    "frames": 120,
+    "bytes": 1094685,
+    "sha256": "4f8a241658c9feaf2210ce130011ead99bd93909867fc7871d3b4be796cab1bd"
+  },
+  {
+    "id": "elegant_maid_dance",
+    "category": "music",
+    "frames": 120,
+    "bytes": 1084039,
+    "sha256": "82b16128612b47ac3c0d89320b334a0739283eda762b516152537f1d21652a6a"
+  },
+  {
+    "id": "light_sway_dance",
+    "category": "music",
+    "frames": 120,
+    "bytes": 1103105,
+    "sha256": "8434ea095fca79a0a6a9133dee7705e33d8d5990279e1d981b9103fbb8309bee"
+  },
+  {
+    "id": "playing_the_flute",
+    "category": "music",
+    "frames": 120,
+    "bytes": 1300975,
+    "sha256": "c5848482ae4e0d6368478044dc0f80efe446e5c03def1cc14b73c2fbf7ba6c3c"
+  },
+  {
+    "id": "playing_the_violin",
+    "category": "music",
+    "frames": 120,
+    "bytes": 1131411,
+    "sha256": "6085de4de330c8b3a050284bee8235a8df14503613a9cb290486a35fbf3acd6c"
+  },
+  {
+    "id": "building_a_snowman",
+    "category": "seasonal",
+    "frames": 120,
+    "bytes": 1107970,
+    "sha256": "532cfd9182c2ac27f0e2ba562104aeb0a60e4d7c97c0c60ec6fd6c294e1842f0"
+  },
+  {
+    "id": "buried_in_autumn_leaves",
+    "category": "seasonal",
+    "frames": 120,
+    "bytes": 1256434,
+    "sha256": "9e78484fee7a5a6a6abdfea4ac9dd7189f31937e30cbfa72a8aed12ac838b609"
+  },
+  {
+    "id": "cooling_with_a_hand_fan",
+    "category": "seasonal",
+    "frames": 120,
+    "bytes": 1179971,
+    "sha256": "d86012d743627f3865f972c10a78d994a36b5c75d953c1c4e4bf10f8790fdd75"
+  },
+  {
+    "id": "flying_a_kite",
+    "category": "seasonal",
+    "frames": 120,
+    "bytes": 1257610,
+    "sha256": "24918c8a1ce69f8632a066bd4eb17b6e2b86f026f71a4787058b7f8f52719209"
+  },
+  {
+    "id": "blue_whale_appears",
+    "category": "special",
+    "frames": 120,
+    "bytes": 1176529,
+    "sha256": "a54628103b7de040f78f2c8a16468a60ff4e4c7c4cec802d70822ed9838137d9"
+  },
+  {
+    "id": "whale_bubbles",
+    "category": "special",
+    "frames": 120,
+    "bytes": 1178058,
+    "sha256": "5be1cec67f830c1bb24e74de11fd2d6ccd15519774bd1d68f29c75787c90d6a4"
+  },
+  {
+    "id": "whale_tail_slap",
+    "category": "special",
+    "frames": 120,
+    "bytes": 1147897,
+    "sha256": "f90930cec75b2e1351ee0ba8d28f52bcb8639a5c7990a47834fe7fe3ac732756"
+  },
+  {
+    "id": "taking_notes",
+    "category": "work",
+    "frames": 120,
+    "bytes": 1110788,
+    "sha256": "7d1c10a8ac6facda1d2c59a6b9afa371c3b0a365a557f4d3ec57e453516436f4"
+  }
+]
