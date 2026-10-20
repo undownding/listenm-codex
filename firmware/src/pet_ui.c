@@ -3,6 +3,7 @@
 #include "pet_extra.h"
 #include "pet_pack.h"
 #include "pet_button.h"
+#include "pet_overlay.h"
 #include "click.h"
 #include <stdlib.h>
 #include <lisa_gpio.h>
@@ -107,8 +108,16 @@ static int display_init(lisa_device_t **out) {
 static void render(void *unused) {
     (void)unused;
     lisa_device_t *display;
+    uint16_t *background=NULL;
     uint16_t *screen=lisa_mem_alloc(240*240*2), *sprite=lisa_mem_alloc(WHALE_WIDTH*WHALE_HEIGHT*2);
     if(!screen || !sprite || display_init(&display)) goto fail;
+    size_t click_size=0;
+    for(unsigned i=0;i<sizeof(click_assets)/sizeof(click_assets[0]);i++)
+        if(click_assets[i].offset+click_assets[i].size>click_size) click_size=click_assets[i].offset+click_assets[i].size;
+    pet_overlay_init((size_t)(whale_blob_end-whale_blob),click_size);
+    background=lisa_mem_alloc(240*240*2);
+    if(pet_overlay_background(background)) { lisa_mem_free(background); background=NULL; }
+    const uint16_t *backdrop=background?background:pet_background;
     uint8_t *extra=NULL; size_t extra_size=0; unsigned extra_frame=0;
     int interaction=0,buffering=0; unsigned interaction_frame=0; uint32_t buffer_started=0;
     unsigned frame=0; pet_state previous=PET_STATE_COUNT; int previous_link=-1;
@@ -137,20 +146,21 @@ static void render(void *unused) {
             if(pet_pack_validate(loaded,extra_size)) lisa_mem_free(loaded);
             else { extra=loaded; extra_frame=0; printf("[pet-ui] extra playing\n"); }
         }
-        memcpy(screen,pet_background,240*240*2);
-        for(unsigned y=0;y<WHALE_HEIGHT;y++) memcpy(sprite+y*WHALE_WIDTH,pet_background+(y+23)*240+16,WHALE_WIDTH*2);
+        memcpy(screen,backdrop,240*240*2);
+        for(unsigned y=0;y<WHALE_HEIGHT;y++) memcpy(sprite+y*WHALE_WIDTH,backdrop+(y+23)*240+16,WHALE_WIDTH*2);
         const whale_clip *clip=&whale_clips[buffering?PET_IDLE:state];
         uint32_t begin=clip->frames[frame],end=clip->frames[frame+1];
         if(interaction) {
             if(!click_assets[interaction-1].size) {
                 const whale_clip *wave=&whale_clips[PET_SPEAKING];
                 begin=wave->frames[interaction_frame]; end=wave->frames[interaction_frame+1];
-                if(pet_frame_decode(whale_blob+begin,end-begin,whale_blob+wave->palette,sprite,WHALE_WIDTH*WHALE_HEIGHT)) goto fail;
+                if(pet_overlay_frame(0,wave->palette,begin,end,sprite) && pet_frame_decode(whale_blob+begin,end-begin,whale_blob+wave->palette,sprite,WHALE_WIDTH*WHALE_HEIGHT)) goto fail;
             } else {
                 const uint8_t *pack=click_blob+click_assets[interaction-1].offset;
                 const uint8_t *base=pack+16+4*(pet_u32(pack+4)+1);
                 begin=pet_u32(pack+16+4*interaction_frame); end=pet_u32(pack+20+4*interaction_frame);
-                if(pet_frame_decode(base+begin,end-begin,base,sprite,WHALE_WIDTH*WHALE_HEIGHT)) goto fail;
+                if(pet_overlay_frame(1,(size_t)(base-click_blob),(size_t)(base-click_blob)+begin,(size_t)(base-click_blob)+end,sprite) &&
+                   pet_frame_decode(base+begin,end-begin,base,sprite,WHALE_WIDTH*WHALE_HEIGHT)) goto fail;
             }
         } else if(extra) {
             const uint8_t *base=extra+16+4*(pet_u32(extra+4)+1);
@@ -159,7 +169,8 @@ static void render(void *unused) {
                 lisa_mem_free(extra); extra=NULL; continue;
             }
         } else if(end>(size_t)(whale_blob_end-whale_blob) || begin>end ||
-           pet_frame_decode(whale_blob+begin,end-begin,whale_blob+clip->palette,sprite,WHALE_WIDTH*WHALE_HEIGHT)) goto fail;
+           (pet_overlay_frame(0,clip->palette,begin,end,sprite) &&
+            pet_frame_decode(whale_blob+begin,end-begin,whale_blob+clip->palette,sprite,WHALE_WIDTH*WHALE_HEIGHT))) goto fail;
         for(unsigned y=0;y<WHALE_HEIGHT;y++) memcpy(screen+(y+23)*240+16,sprite+y*WHALE_WIDTH,WHALE_WIDTH*2);
         text(screen,"CODEX",8); text(screen,interaction?"CLICK":extra?"EASTER EGG":buffering?"IDLE":connected?labels[state]:"OFFLINE",225);
         // The Arcs-Mini panel requires a clockwise framebuffer rotation. Rotate the
@@ -184,6 +195,8 @@ static void render(void *unused) {
     }
 fail:
     printf("[pet-ui] display/asset failure\n");
+    pet_overlay_close();
+    if(background) lisa_mem_free(background);
     if(screen) lisa_mem_free(screen); if(sprite) lisa_mem_free(sprite);
     vTaskDelete(NULL);
 }

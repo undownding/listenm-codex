@@ -132,3 +132,10 @@ python3 scripts/verify-button.py
 - [Lisem](https://github.com/LISTENAI/Lisem)：芯片、网络与显示仿真。
 - [clawd-on-desk](https://github.com/rullerzhou-afk/clawd-on-desk)：Codex 日志旁路观察思路参考。
 - 香港天文台及中国科学院紫金山天文台：离线农历数据与交叉校验资料。
+
+### TF 卡资源 overlay
+
+将 `background.rgb565`、`whale.bin`、`click.bin` 放到 FAT 格式 TF 卡的根目录，
+重启后固件优先读取其中存在的文件，缺失或读取失败时使用内置资源。
+背景须为 240×240 RGB565；动画包须与当前固件的索引布局一致。
+完整格式及回退规则见 [资源说明](firmware/assets/README.md#tf-card-overlay)。

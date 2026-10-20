@@ -55,3 +55,25 @@
 本地 Codex Desktop 会话曾实际驱动固件接收 `custom_tool_call`、`custom_tool_call_output`、`reasoning`、`message` 状态。网络仅传输白名单元数据，不含消息正文。真实会话日志、线程 ID、本机实例身份、截图中间文件和编译网络配置保留在被忽略的 `artifacts/`、`build/`，不随公共仓库发布。
 
 尚未验证：ListenM 实物烧录、WPA2 接入、长期运行、多个会话的优先级仲裁。当前功能针对本地开发网络；固件不支持 TLS、DNS 或任意第三方 SSE 服务。
+
+## TF overlay 仿真验证
+
+2026-10-20 使用 `scripts/verify-overlay.py` 在独立 Lisem Arcs-Mini 实例中完成：
+
+- 64 MiB FAT16 TF 卡镜像，根目录放入金黄色棋盘背景及当前 `whale.bin`、`click.bin`。
+- UART 确认三个文件均从 TF 卡选用；截图四角 RGB 均为 `(242, 180, 0)`，
+  与测试背景 RGB565 `0xFDE0` 经固件 95% 背光后的颜色一致。
+- 连续截图确认待机动画、双击蓝鲸动画都在变化，双击播放完成并进入待机缓冲。
+- 无 TF 卡、TF 卡背景文件截断两种情况下均恢复内置海底背景；两者截图顶部边缘逐像素一致。
+- 未出现动画读取/解码失败或 display/asset failure；人工检查了金色背景与透明角色的合成截图。
+
+复现（需 `mkfs.fat`，测试镜像、UART 日志和截图均保存在忽略的 `artifacts/`）：
+
+```bash
+python3 -m venv artifacts/overlay-tools
+artifacts/overlay-tools/bin/pip install pillow pyfatfs 'setuptools<81'
+artifacts/overlay-tools/bin/python scripts/verify-overlay.py
+```
+
+固件交叉编译及全部项目测试通过，C 测试新增 overlay 后为 5 项，覆盖 TF
+优先、缺失/截断文件、动画边界检查、损坏帧不污染回退像素。未验证实体 TF 卡性能或热插拔。

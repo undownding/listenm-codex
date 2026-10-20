@@ -38,3 +38,32 @@ Original aspect ratios and frame timing are preserved; frame rate is sampled at
 `manifest.json` records all source hashes and the resulting blob hash.
 
 `background.rgb565` is the generated underwater backdrop; its provenance and source PNG are in `assets/backgrounds/`. The decoder blends each frame over this background, preserving opaque white costume pixels and semitransparent edges. `click.bin` uses the same WHP2 format.
+
+## TF card overlay
+
+At boot, the firmware mounts a FAT-formatted TF card read-only at the application
+level (it never creates files or formats a card). Place any of these files in the
+**card root**; each is optional and takes priority over its built-in counterpart:
+
+| Card file | Format |
+| --- | --- |
+| `background.rgb565` | 240×240 little-endian RGB565, exactly 115,200 bytes, before display rotation |
+| `whale.bin` | State animation blob compatible with this firmware's `whale.h` |
+| `click.bin` | Button animation blob compatible with this firmware's `click.h` |
+
+The device paths are `/SD:/background.rgb565`, `/SD:/whale.bin`, and
+`/SD:/click.bin`. Copying the files from this directory is a compatible starting
+point. Animation offsets, palettes and frame counts still come from the compiled
+headers: replacements must retain **the same byte size and frame layout**. If
+repacking changes those offsets, rebuild the firmware with the matching headers.
+This is a binary resource overlay, not a PNG/GIF/video player. Bridge-downloaded
+easter-egg packs continue to use the existing download path.
+
+Background pixels are cached once; animations are read one frame at a time to
+avoid loading the multi-megabyte blobs into PSRAM. No card, a missing file, an
+incorrect file size, allocation failure, or a failed read falls back to Flash.
+A malformed animation frame disables that file's overlay for the rest of the
+boot; decoding is atomic so partially decoded pixels cannot pollute the fallback.
+Other valid overlays remain active. Insert/replace files before boot and restart
+to reload them; hot insertion and live updates are not supported. Logs prefixed
+`[overlay]` identify selected TF resources and runtime fallback.
