@@ -13,6 +13,10 @@
 #include "receiver.h"
 #include "pet_ui.h"
 
+#ifdef PET_VOICE
+#include "pet_voice.h"
+#endif
+
 #define WIFI_READY 1
 #define IP_READY 2
 static EventGroupHandle_t network;
@@ -50,6 +54,9 @@ int main(int argc, char **argv) {
     if (wifi_mgr_init(wifi_mgr_ops_get()) || wifi_mgr_sta_enable()) return -1;
     wifi_mgr_sta_add_connection_cb(connection, NULL);
     wifi_mgr_sta_config_t ap = {.ssid = PET_WIFI_SSID, .pwd = PET_WIFI_PASSWORD};
+#ifdef PET_VOICE
+    if (pet_voice_init()) printf("[voice] initialization failed\n");
+#endif
     static char cursor[96];
     for (;;) {
         if (!(xEventGroupGetBits(network) & IP_READY)) {

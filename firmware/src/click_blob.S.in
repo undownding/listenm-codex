@@ -2,9 +2,9 @@
 .balign 4
 .global click_blob
 click_blob:
-.incbin "@CMAKE_CURRENT_SOURCE_DIR@/assets/click.bin"
+.incbin "@PET_ASSETS_DIR@/click.bin"
 
 .balign 4
 .global pet_background
 pet_background:
-.incbin "@CMAKE_CURRENT_SOURCE_DIR@/assets/background.rgb565"
+.incbin "@PET_ASSETS_DIR@/background.rgb565"

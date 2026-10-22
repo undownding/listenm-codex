@@ -3,7 +3,7 @@ import {createExtras} from './extras.js';
 import {randomUUID, timingSafeEqual} from 'node:crypto';
 import {normalize} from './normalize.js';
 
-export function createBridge({token = '', heartbeatMs = 15000, historyLimit = 256} = {}) {
+export function createBridge({token = '', heartbeatMs = 15000, historyLimit = 256, voice} = {}) {
   const extras = createExtras();
   const epoch = randomUUID();
   let seq = 0;
@@ -27,6 +27,7 @@ export function createBridge({token = '', heartbeatMs = 15000, historyLimit = 25
         res.writeHead(401); res.end(); return;
       }
     }
+    if (voice && await voice(req, res)) return;
     if (await extras(req,res)) return;
     if (req.method === 'GET' && req.url === '/health') {
       res.setHeader('Content-Type', 'application/json');

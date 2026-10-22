@@ -182,7 +182,7 @@ static void render(void *unused) {
             uint16_t t=screen[y*240+x]; screen[y*240+x]=screen[y*240+239-x]; screen[y*240+239-x]=t;
         }
         if(lisa_display_write(display,0,0,&desc,screen)) goto fail;
-        if(extra && ++extra_frame>=pet_u32(extra+4)) { lisa_mem_free(extra); extra=NULL; printf("[pet-ui] extra finished\n"); }
+        if(extra && (extra_frame+=12/WHALE_FPS)>=pet_u32(extra+4)) { lisa_mem_free(extra); extra=NULL; printf("[pet-ui] extra finished\n"); }
         if(interaction) {
             unsigned count=!click_assets[interaction-1].size?whale_clips[PET_SPEAKING].count:pet_u32(click_blob+click_assets[interaction-1].offset+4);
             if(++interaction_frame>=count) {
