@@ -12,10 +12,9 @@ from PIL import Image, ImageChops
 
 ROOT = Path(__file__).resolve().parents[1]
 CLI = Path(os.environ.get('LISEM_BIN', ROOT / '.deps/Lisem/lisem'))
-config = (ROOT / 'build/firmware/generated/pet_config.h').read_text()
-def setting(name):
-    return re.search(r'^#define ' + name + r' "?([^"\n]+)"?$', config, re.M)[1]
-host, port, token = setting('PET_BRIDGE_IP'), setting('PET_BRIDGE_PORT'), setting('PET_BRIDGE_TOKEN')
+from tf_image import create_card
+host = os.environ.get('PET_TEST_HOST', '172.17.0.1')
+port, token = '18787', 'isolated-tf-test-token'
 (ROOT / 'artifacts').mkdir(exist_ok=True)
 work = Path(tempfile.mkdtemp(prefix='lisem-e2e-', dir=ROOT / 'artifacts'))
 sessions = work / 'sessions'
@@ -75,10 +74,12 @@ def append(kind, subtype, **fields):
 try:
     bridge = start_bridge()
     instance = json.loads(cli('create','--board','arcs-mini','--name','listenm-e2e'))['id']
-    cli('write',instance,str(ROOT/'build/firmware/listenm-pet.bin'))
+    cli('write',instance,str(ROOT/'build/voice/listenm-voice-full.bin'))
+    cli('sd-card',instance,'--image',str(create_card(work,host,port,token)))
     cli('start',instance,'--network','--seconds','360','--timeout','480')
     wait_for(lambda text:'[pet] SSE connected' in text)
     wait_for(lambda text:'[pet-ui] display ready' in text)
+    wait_for(lambda text:'[voice] wake word ready' in text)
     captures=[]
     transitions=[('thinking','deep_thought',{'type':'event_msg','payload':{'type':'task_started'}}),
                  ('working','coding',{'type':'response_item','payload':{'type':'function_call'}}),
@@ -115,7 +116,7 @@ try:
             headers={'Authorization':f'Bearer {token}'})
         with opener.open(request,timeout=2) as response: assert response.status==202
         start=len(collected)
-        wait_for(lambda text: 'extra downloaded='+egg in text[start:] and 'extra playing' in text[start:],90)
+        wait_for(lambda text: 'extra TF='+egg in text[start:] and 'extra playing' in text[start:],90)
         frames=[]
         for n in range(4):
             target=work/f'{egg}-{n}.png'; cli('screenshot',instance,str(target))
@@ -136,7 +137,7 @@ try:
     append('event_msg','turn_aborted')
     wait_for(lambda text:'"type":"turn_aborted"' in text)
     result = {'passed':True,'fixture':'synthetic Codex rollout and hook inputs','instance':instance,
-              'checks':['Wi-Fi DHCP','SSE TCP connection','seven state animations','nonblank display and changing frames','bridge restart/reset/reconnect','festival download/playback','game playback/completion','Codex preempts extras'],
+              'checks':['TF model wake engine initialization','Wi-Fi DHCP','SSE TCP connection','seven state animations','nonblank display and changing frames','bridge restart/reset/reconnect','festival TF playback','game playback/completion','Codex preempts extras'],
               'uart':str(work/'uart.log')}
     (work/'result.json').write_text(json.dumps(result,indent=2)+'\n')
     print(json.dumps(result,indent=2))

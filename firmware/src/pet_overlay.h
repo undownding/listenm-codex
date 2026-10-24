@@ -6,6 +6,7 @@
 void pet_overlay_init(size_t whale_size,size_t click_size);
 void pet_overlay_close(void);
 int pet_overlay_background(uint16_t *pixels);
-/* Decode atomically: on failure pixels remain unchanged for Flash fallback. */
+int pet_overlay_read_click(size_t offset,void *data,size_t size);
+/* Decode atomically: on failure pixels remain unchanged. */
 int pet_overlay_frame(int click,size_t palette,size_t begin,size_t end,uint16_t *pixels);
 #endif

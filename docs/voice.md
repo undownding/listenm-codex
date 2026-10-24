@@ -1,6 +1,6 @@
-# 唤醒词语音输入
+# 固件与唤醒词语音输入
 
-语音版使用 ARCS SDK 的单麦唤醒算法（示例资源唤醒词为“小聆小聆”），录制用户发言，
+固件使用 ARCS SDK 的单麦唤醒算法（示例资源唤醒词为“小聆小聆”），录制用户发言，
 经电脑 bridge 转写后投递给当前项目最近更新的 Codex 主会话。不安装 Codex hook。
 
 ## 启动 bridge
@@ -31,36 +31,41 @@ node bridge/src/main.js
 音频会发送到所配置的转写服务。bridge 不把音频或转写正文写入日志/文件；
 提交后的文字成为 Codex 会话历史。bridge 的 SSE 仍只包含状态元数据。
 
-## 构建语音固件
+## 构建固件
 
 ```bash
-export PET_BRIDGE_IP="$BRIDGE_HOST"
-export PET_WIFI_SSID='你的 Wi-Fi'
-export PET_WIFI_PASSWORD='你的 Wi-Fi 密码'
-./scripts/build-voice.sh
+./scripts/build-firmware.sh
+python3 scripts/prepare-tf.py /你的/TF卡挂载目录
+# 编辑 TF 卡 config.ini 中的网络参数、token、wake_word、wake_model、wake_wrap。
 ```
 
 输出 `build/voice/listenm-voice-full.bin` 是 16 MiB 整包，Flash 写入偏移为 **0**。
 `build/voice/listenm-pet.bin` 只是 CP 应用，偏移为 **0x800000**，不能单独写到 0。
-本次开发构建使用测试网络和测试 token；实际使用必须按自己的网络、token 重新构建。
+固件不包含网络凭据；修改 TF 卡配置并重启即可，无需重新构建。
 
-语音版与普通版采用不同 Flash 布局：
+项目只有一个固件版本，Flash 布局如下：
 
 | 偏移 | 内容 |
 | --- | --- |
 | `0x000000` | SDK 单麦示例的 AP 固件（含启动程序） |
-| `0x200000` | SDK 单麦算法资源 |
-| `0x4D0000` | 算法 wrap 配置 |
+| `0x200000`–`0x7FFFFF` | 空白保留；算法与 wrap 已移至 TF 卡 |
 | `0x800000` | 本项目 CP 语音和显示应用，最大 8 MiB |
 
 构建脚本校验每段资源不超过对应分区。AP/CP 的共享 SRAM 布局按 SDK 单麦示例匹配。
 SDK 路径可用 `SDK_ROOT` 覆盖，AP 镜像来自其
 `arcs-sdk/samples/algorithms/wake_up/wakeup_single/res`，没有在本仓库另行复制二进制。
 
-为适应 CP 分区，语音版内置动画抽取为 **6 FPS**，播放时长保持不变。
-普通版保持 12 FPS。若使用 TF overlay，请复制 **`build/voice/voice-assets/`** 内的三个资源文件；
-普通版 `firmware/assets/` 下的完整动画包与语音版索引不同，不能混用。
-联网彩蛋仍按原时长播放，语音版每次显示跳过一帧。
+固件统一使用 **12 FPS**，所有动画、背景、彩蛋和语音模型均从 TF 卡读取。
+语音模型在启动时读入 PSRAM，保持到关机；Flash 整包仅包含 AP 和 CP 程序。
+
+`config.ini` 中的 `wake_word` 是 SDK 返回的精确 keyword，例如示例模型的
+`xiao3 ling2 xiao3 ling2`（小聆小聆）。只有匹配该词的主唤醒事件才开始录音。
+换词必须同时使用支持该词的模型，并修改 `wake_model` / `wake_wrap` 路径。
+没有模型文件或相关配置时，串口报告语音初始化失败，显示与联网功能继续运行。
+这不是仅靠文本就能训练任意唤醒词的接口。
+
+录音期间立即显示“聆听中” 与随声音变化的音量条，安静时保留轻微动态，
+并暂停点击和彩蛋；录音结束（包括无语音取消和网络错误）后恢复当前 Codex 状态。
 
 ## 输入规则
 
@@ -76,7 +81,7 @@ SDK 路径可用 `SDK_ROOT` 覆盖，AP 镜像来自其
 
 会话选择以 bridge 处理唤醒请求时为准。capture 60 秒过期；同一时间只允许一次录音/上传。
 没有符合条件的会话时直接失败，不自动创建。默认音量阈值为 600（PCM 平均绝对值），
-可用 `./scripts/build-voice.sh -DPET_VOICE_THRESHOLD=800` 调整。
+可在 TF 卡 `config.ini` 设置 `voice_threshold=800` 后重启调整。
 
 App Server 是 bridge 启动的独立进程。恢复同一会话不保证桌面端即时刷新，也不能可靠识别
 其他进程正在执行的轮次；使用时避免桌面端和 bridge 同时执行同一会话。
@@ -99,7 +104,7 @@ HTTP 200 只代表输入已提交，不代表 Codex 已执行成功。失败返�
 ## 验证
 
 `./scripts/test.sh` 包含 bridge 的语音路由与模拟 App Server 传输测试。
-`./scripts/build-voice.sh` 检查 SDK 编译、链接及整包分区界限，不调用实际转写服务、
+`./scripts/build-firmware.sh` 检查 SDK 编译、链接及整包分区界限，不调用实际转写服务、
 不向真实 Codex 会话发送测试消息，也不自动烧录。
 
 接口参考：[Codex App Server](https://learn.chatgpt.com/docs/app-server)、

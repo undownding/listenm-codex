@@ -1,7 +1,0 @@
-.section .rodata.whale_assets,"a",@progbits
-.balign 4
-.global whale_blob
-.global whale_blob_end
-whale_blob:
-.incbin "@PET_ASSETS_DIR@/whale.bin"
-whale_blob_end:

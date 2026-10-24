@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdbool.h>
+#include <string.h>
 #include "FreeRTOS.h"
 #include "task.h"
 #include "event_groups.h"
@@ -12,10 +13,9 @@
 #include "pet_config.h"
 #include "receiver.h"
 #include "pet_ui.h"
+#include "pet_storage.h"
 
-#ifdef PET_VOICE
 #include "pet_voice.h"
-#endif
 
 #define WIFI_READY 1
 #define IP_READY 2
@@ -42,6 +42,7 @@ static void connection(wifi_mgr_connection_info_t *info, void *arg) {
 int main(int argc, char **argv) {
     (void)argc; (void)argv;
     printf("[pet] listenm receiver boot\n");
+    if (pet_storage_init() || pet_config_load()) { printf("[pet] TF/config.ini missing or invalid; startup stopped\n"); return -1; }
     if (pet_ui_init()) { printf("[pet-ui] task creation failed\n"); return -1; }
     network = xEventGroupCreate();
     mac_manager_config_t config = {.random_mac_if_mac_invalid = false};
@@ -53,10 +54,10 @@ int main(int argc, char **argv) {
     xEventGroupWaitBits(network, WIFI_READY, pdFALSE, pdTRUE, portMAX_DELAY);
     if (wifi_mgr_init(wifi_mgr_ops_get()) || wifi_mgr_sta_enable()) return -1;
     wifi_mgr_sta_add_connection_cb(connection, NULL);
-    wifi_mgr_sta_config_t ap = {.ssid = PET_WIFI_SSID, .pwd = PET_WIFI_PASSWORD};
-#ifdef PET_VOICE
+    wifi_mgr_sta_config_t ap = {0};
+    memcpy(ap.ssid,PET_WIFI_SSID,strlen(PET_WIFI_SSID));
+    memcpy(ap.pwd,PET_WIFI_PASSWORD,strlen(PET_WIFI_PASSWORD));
     if (pet_voice_init()) printf("[voice] initialization failed\n");
-#endif
     static char cursor[96];
     for (;;) {
         if (!(xEventGroupGetBits(network) & IP_READY)) {

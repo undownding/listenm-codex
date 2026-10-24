@@ -23,6 +23,9 @@ int main(int argc,char **argv) {
     write_file("whale.bin",blob,n);
     write_file("click.bin",blob,n);
     pet_overlay_init(n,n);
+    uint8_t first[8]; assert(!pet_overlay_read_click(0,first,sizeof(first)));
+    assert(!memcmp(first,blob,sizeof(first)));
+    assert(pet_overlay_read_click(n-1,first,sizeof(first))==-1);
     memset(background,0,sizeof(background)); assert(!pet_overlay_background(background));
     for(unsigned i=0;i<240*240;i++) assert(background[i]==0x3535);
     /* Use a different valid frame at the call site to prove the file is read. */
@@ -44,6 +47,6 @@ int main(int argc,char **argv) {
     pet_overlay_init(n,0); assert(pet_overlay_background(background)==-1);
     assert(pet_overlay_frame(0,0,begin,end,pixels)==-1); pet_overlay_close();
     unlink("click.bin"); unlink("whale.bin"); unlink("background.rgb565"); assert(!chdir("/")); assert(!rmdir(dir));
-    free(blob); puts("Overlay priority, missing/truncated assets and atomic corruption fallback passed");
+    free(blob); puts("Overlay priority, missing/truncated assets and atomic corruption rejection passed");
     return 0;
 }

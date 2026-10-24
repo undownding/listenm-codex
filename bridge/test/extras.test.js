@@ -15,6 +15,10 @@ test('extras catalog, authentication, selection and binary response',async()=>{
     assert(!catalog.some(c=>['drag','moves','turn'].includes(c.category)));
     assert.equal((await fetch(base+'/pet/play/not-real',{method:'POST',headers})).status,404);
     assert.equal((await fetch(base+'/pet/play/playing_gomoku',{method:'POST',headers})).status,202);
+    assert.equal((await fetch(base+'/pet/next-id')).status,401);
+    const selected=await fetch(base+'/pet/next-id',{headers});
+    assert.equal(await selected.text(),'playing_gomoku');
+    assert.equal((await fetch(base+'/pet/play/playing_gomoku',{method:'POST',headers})).status,202);
     const response=await fetch(base+'/pet/next',{headers});
     assert.equal(response.headers.get('x-animation'),'playing_gomoku');
     const data=Buffer.from(await response.arrayBuffer());

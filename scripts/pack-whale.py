@@ -98,7 +98,6 @@ def main():
     (dest/'whale.bin').write_bytes(blob)
     header='#ifndef WHALE_ASSETS_H\n#define WHALE_ASSETS_H\n#include <stdint.h>\n'
     header+=f'#define WHALE_WIDTH {W}\n#define WHALE_HEIGHT {H}\n#define WHALE_FPS {FPS}\n'
-    header+='extern const uint8_t whale_blob[], whale_blob_end[];\n'
     header+='typedef struct { uint32_t palette; const uint32_t *frames; unsigned count; const char *name; } whale_clip;\n'
     header+='\n'.join(declarations)+'\nstatic const whale_clip whale_clips[] = {\n'
     for d in descriptions: header+=f'  {{{d["palette"]}, frames_{d["state"]}, {d["frames"]}, "{d["clip"].split("/")[-1]}"}},\n'

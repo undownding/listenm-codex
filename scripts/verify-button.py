@@ -3,6 +3,7 @@
 import json, re, subprocess, tempfile, time
 from pathlib import Path
 from PIL import Image, ImageChops
+from tf_image import create_card
 ROOT=Path(__file__).resolve().parents[1]
 (ROOT/'artifacts').mkdir(exist_ok=True)
 work=Path(tempfile.mkdtemp(prefix='button-e2e-',dir=ROOT/'artifacts'))
@@ -23,10 +24,12 @@ def screenshot(name):
  target=work/f'{name}.png';cli('screenshot',instance,str(target));return Image.open(target).convert('RGB')
 try:
  instance=cli('create','--board','arcs-mini','--name','Click acceptance')['id']
- cli('write',instance,str(ROOT/'build/firmware/listenm-pet.bin'))
+ cli('write',instance,str(ROOT/'build/voice/listenm-voice-full.bin'))
+ cli('sd-card',instance,'--image',str(create_card(work)))
  result=cli('start',instance,'--seconds','150','--timeout','240')
  (work/'start.json').write_text(json.dumps(result,indent=2))
  wait('display ready')
+ wait('[voice] wake word ready')
  # Use virtual-time sequences so host scheduling cannot turn a double into two singles.
  status=cli('status',instance);(work/'status.json').write_text(json.dumps(status,indent=2))
  run=status['runtime']['session']['output']

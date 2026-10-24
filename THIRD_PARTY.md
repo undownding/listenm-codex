@@ -21,3 +21,11 @@
 ## 外部依赖
 
 ARCS Mini SDK、Lisem 和原始 WebM 仓库下载至被忽略的 `.deps/`，不纳入本仓库源码提交，使用时遵循各自许可。本项目未修改 SDK 或 Lisem 源码。
+
+## Chinese status font
+
+`firmware/assets/status-font.bin` contains rasterized labels from Noto Sans CJK SC
+Medium, by the Noto/Source Han contributors, licensed under SIL OFL 1.1.
+Source: https://github.com/notofonts/noto-cjk/tree/main/Sans
+License: [noto-sans-cjk-OFL.txt](licenses/noto-sans-cjk-OFL.txt).
+Rebuild with `scripts/pack-font.py`; labels remain separate TF resources.

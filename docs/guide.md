@@ -33,13 +33,15 @@ SDK 下载较大，首次构建会通过 SDK 的 `env.sh` 安装工具链到 `~/
 export PET_BRIDGE_IP=172.17.0.1
 export BRIDGE_TOKEN="$(python3 -c 'import secrets; print(secrets.token_hex(24))')"
 ./scripts/build-firmware.sh -C
+python3 scripts/prepare-tf.py /你的/TF卡挂载目录
+# 编辑 config.ini，使 bridge_ip、bridge_token 与上述环境变量一致。
 ```
 
 `PET_BRIDGE_IP` 必须换成本机实际存在的地址（可用 `hostname -I` 查看）。
 Lisem 正式 CLI 禁止宿主回环访问，不能填 `127.0.0.1` 或以网关
 `192.0.2.1` 绕到回环服务。token 在 bridge 和固件之间必须一致。当前是明文 HTTP，适用于可信开发网络。
 
-构建产物：`build/firmware/listenm-pet.bin`，包含 Boot 和 CP 应用，写入
+构建产物：`build/voice/listenm-voice-full.bin`，包含 SDK AP（含启动程序）和 CP 应用，写入
 Flash 偏移 **0**。它是本项目的独立固件，不是原语音助手固件的增量更新，
 不要写到原项目的 `0x600000` 应用分区。
 
@@ -61,7 +63,7 @@ BRIDGE_HOST="$PET_BRIDGE_IP" BRIDGE_TOKEN="$BRIDGE_TOKEN" \
 .deps/Lisem/lisem --data-dir "$PWD/artifacts/manual" create \
   --board arcs-mini --name listenm-codex
 .deps/Lisem/lisem --data-dir "$PWD/artifacts/manual" write DEVICE_ID \
-  build/firmware/listenm-pet.bin
+  build/voice/listenm-voice-full.bin
 .deps/Lisem/lisem --data-dir "$PWD/artifacts/manual" start DEVICE_ID \
   --network --seconds 300 --timeout 600
 .deps/Lisem/lisem --data-dir "$PWD/artifacts/manual" logs DEVICE_ID 0 --limit 16384
@@ -99,17 +101,16 @@ python3 scripts/verify-lisem.py
 | 变量 | 默认值 / 用途 |
 | --- | --- |
 | `BRIDGE_HOST` | `127.0.0.1`；仿真器联调改为宿主网卡地址 |
-| `BRIDGE_PORT` | `8787`；构建脚本也读取此变量 |
+| `BRIDGE_PORT` | `8787`；设备配置的 bridge_port 必须一致 |
 | `BRIDGE_TOKEN` | Bearer token；监听非回环地址时必填 |
 | `CODEX_HOME` | `~/.codex` |
 | `CODEX_SESSIONS_DIR` | `$CODEX_HOME/sessions`；可用于远程挂载目录或测试 |
 | `BRIDGE_WATCH` | 设为 `0` 关闭文件监听，只接收 `/ingest` |
 | `SDK_ROOT` | `.deps/arcs_mini`；完整 SDK 应用仓库路径 |
-| `PET_BRIDGE_IP` | 构建时必填，IPv4 字面量 |
-| `PET_WIFI_SSID` / `PET_WIFI_PASSWORD` | `Lisem` / 空；构建时配置 |
+| TF `config.ini` | 网络、token、录音阈值、唤醒词与模型路径，见 `config/config.example.ini` |
 | `LISEM_BIN` | 自动验收所用 Lisem 可执行文件路径 |
 
-固件网络参数在构建时写入镜像；改变参数需重新构建。修改 Boot 配置时
+固件网络参数从 TF 卡 `config.ini` 读取；改变参数后重启即可。修改 Boot 配置时
 使用 `-C` 清理构建，避免 SDK 子工程沿用旧配置。
 
 ## 事件与接口
@@ -160,13 +161,12 @@ SSE 每 15 秒发送注释心跳，保留最近 256 条事件、最多 16 个客
 忽小；同时保留气泡等较宽特效所需空间。
 
 渲染目标 12 FPS，每段动画循环 10 秒。同状态事件保持播放进度，普通切换
-至少展示 700 ms，等待/错误立即切换。断线后显示 OFFLINE 和待机动画，重连
+至少展示 700 ms，等待/错误立即切换。断线后显示“离线” 和待机动画，重连
 后跟随新事件。渲染在独立 FreeRTOS 任务中，网络回调只更新状态，不执行刷屏。
 多会话共用一个桌宠，当前按最近收到的事件显示，不做多会话优先级仲裁。
 
-屏幕为 Arcs-Mini 的 240×240 ST7789，SPI0 DMA 输出 RGB565。固件包含约
-7.6 MiB 核心动画包，加上点击动画和海底背景，完整镜像约 14.14 MiB，面向 **16 MiB Flash 的 LS2684**；
-不可直接用于存储容量更小的板型。核心与点击素材不需要 SD 卡或运行时下载。
+屏幕为 Arcs-Mini 的 240×240 ST7789，SPI0 DMA 输出 RGB565。核心、点击动画和背景
+都存储在 TF 卡，CP 应用约 1.2 MiB，AP/CP 完整镜像为 16 MiB。必须插入包含配置和资源的 FAT TF 卡。
 背光使用 95% PWM（本次 Lisem/SDK 组合的 100% 静态输出路径会黑屏）。
 
 动画资源有独立的非商业使用条款，来源、署名、格式与重建命令见
@@ -188,13 +188,13 @@ ListenM 实物首次烧录后黑屏，仍未通过实机验收；当前通过范
 
 ### 待机彩蛋（88 个动画）
 
-保留 7 个 Codex 核心状态在 Flash；新增 81 个动画由 bridge 按需下载，包括 20 个节日、9 个游戏，以及日常、饮食、音乐、魔术、季节、鲸鱼特效等。排除了原项目的拖拽、位移和转身分类。资源仍遵循原项目的素材授权，见 `licenses/whale-assets-upstream.md`。
+7 个 Codex 核心状态和新增 81 个动画均存放 TF 卡；彩蛋由 bridge 选择名称后在卡上读取，包括 20 个节日、9 个游戏，以及日常、饮食、音乐、魔术、季节、鲸鱼特效等。排除了原项目的拖拽、位移和转身分类。资源仍遵循原项目的素材授权，见 `licenses/whale-assets-upstream.md`。
 
 联网且 Codex 空闲持续约 20 秒后，播放一个约 10 秒的彩蛋，再回到呼吸。工作、思考、等待授权等核心状态优先，状态切换会打断彩蛋；断网回到本地动画。每次只缓存一个动画（上限 1.75 MB），不增加 Flash 中的素材量。所有动画复用现有 208×196 容器、源图裁切、统一缩放和定位，不再按单个动画的包围盒调整人物大小；超出固定视口的边缘特效会被裁切。
 
 普通日期随机轮播、不连续重复；按 bridge 主机日期提高当季动画、万圣节（10 月 24 日起）、圣诞节（12 月 20 日起）的出现概率。游戏动画是人物玩游戏的演出，不包含交互游戏。
 
-农历节日按北京时间（`Asia/Shanghai`）自动匹配，每次下载下一段彩蛋时重新判断，无需重启或联网查询日历。优先级为：手动点播 → 当天农历节日素材 → 原有季节加权/随机轮播。Codex 工作状态仍优先于所有彩蛋。节日有多个素材时避免连续重复；仅有一个时允许重复，避免下一次轮播落回无关动画。跨日后下一次下载使用新日期，正在播放的动画自然结束。
+农历节日按北京时间（`Asia/Shanghai`）自动匹配，每次选择下一段彩蛋时重新判断，无需重启或联网查询日历。优先级为：手动点播 → 当天农历节日素材 → 原有季节加权/随机轮播。Codex 工作状态仍优先于所有彩蛋。节日有多个素材时避免连续重复；仅有一个时允许重复，避免下一次轮播落回无关动画。跨日后下一次选择使用新日期，正在播放的动画自然结束。
 
 | 日期 | 优先彩蛋 |
 | --- | --- |
@@ -218,7 +218,7 @@ curl -X POST -H "Authorization: Bearer $BRIDGE_TOKEN" \
 # 节日示例：decorating_a_christmas_tree、moon_festival、eating_zongzi
 ```
 
-点播在下一次待机下载时生效，不打断正在进行的 Codex 工作。当前面向单设备，多个设备共享 bridge 的待播选择。`GET /pet/next` 返回下一段动画二进制。额外素材位于 `bridge/assets`（约 90 MiB），启动 bridge 前应已生成；缺失时核心动画仍正常工作。重建素材：
+点播在下一次待机加载时生效，不打断正在进行的 Codex 工作。当前面向单设备，多个设备共享 bridge 的待播选择。设备使用 `GET /pet/next-id` 获取名称后读取 TF 卡 `extras/` 中的包；`GET /pet/next` 保留给兼容客户端。额外素材源位于 `bridge/assets`（约 90 MiB），使用 `prepare-tf.py` 复制到卡上；缺失时核心动画仍正常工作。重建素材：
 
 ```bash
 python3 scripts/pack-extras.py
@@ -245,7 +245,7 @@ Arcs-Mini 功能键（PB4，低电平按下）在松手时触发点击，20 ms �
 - 单击：使用原插件完整点击回应池：开心跃动（`happy_hop`）、害羞惊讶（`shy_surprise`）、傲娇生气（`tsundere_pout`）、挠痒咯咯笑（`ticklish_giggle`）、元气挥手（`cheerful_wave`）。每轮随机打乱五个动画，播遍后再洗牌，且跨轮不连续重复；实体功能键不再区分头/身体/尾巴位置。与原插件一样，抵达目标后的 `arrival_wave` 不属于点击回应池。
 - 双击：两次释放间隔小于 320 ms，立即切换 `blue_whale_appears`（蓝鲸现世），与原插件一样第一击无需等待双击窗口结束。
 - 点击优先于所有 Codex 状态和待机彩蛋；播放期间继续接收 Codex 状态，播完回到 700 ms 呼吸缓冲，再恢复最新状态。后续点击可再次打断当前回应。
-- 点击动画内置 Flash，断网仍可响应；点击素材包约 5.27 MiB，合并固件约 14.14 MiB，仍在 16 MiB Flash 内。
+- 点击动画从 TF 卡读取，断网仍可响应；点击素材包约 5.27 MiB，不占固件 Flash。
 
 在 Lisem 设备窗口按下并松开「功能键」即可验收。命令行可使用 `lisem button DEVICE_ID function press` / `release`。离线自动验收脚本为 `python3 scripts/verify-button.py`，使用独立设备，不占用 bridge 端口。
 
@@ -256,4 +256,4 @@ Arcs-Mini 功能键（PB4，低电平按下）在松手时触发点击，20 ms �
 
 背景原图位于 `assets/backgrounds/whale-undersea.png`，设备使用 `firmware/assets/background.rgb565`。动画从透明 WebM 重新生成，采用 WHP2 格式：RGB565 调色板索引与独立透明度平面；16 级透明度保留柔和边缘和原本不透明的白色衣服。固件每帧先绘制背景，再合成角色，最后绘制状态文字。
 
-核心、点击、联网彩蛋均使用同一透明格式。升级时必须同时更新固件和 bridge 素材，并重启 bridge；旧 WHP1 固件不能播放 WHP2 彩蛋。PSRAM 堆设为 3 MiB，为单个彩蛋下载缓存及显示缓冲留出空间。背景转换工具是 `scripts/pack-background.sh`，动画转换顺序保持核心 → 额外彩蛋 → 点击包。
+核心、点击、联网彩蛋均使用同一透明格式。升级时必须同时更新固件、TF 卡和 bridge 目录，并重启 bridge；旧 WHP1 固件不能播放 WHP2 彩蛋。PSRAM 堆设为 5 MiB，为唤醒模型、录音、单个彩蛋及显示缓冲留出空间。背景转换工具是 `scripts/pack-background.sh`，动画转换顺序保持核心 → 额外彩蛋 → 点击包。

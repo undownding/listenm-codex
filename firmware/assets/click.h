@@ -1,7 +1,6 @@
 #ifndef PET_CLICK_ASSETS_H
 #define PET_CLICK_ASSETS_H
 #include <stdint.h>
-extern const uint8_t click_blob[];
 #define CLICK_SINGLE_COUNT 5
 #define CLICK_DOUBLE 6
 typedef struct { uint32_t offset,size; const char *name; } click_asset;

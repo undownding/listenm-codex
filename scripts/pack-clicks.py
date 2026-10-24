@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Embed all single-click + double-click packs; cheerful_wave is already core."""
+"""Pack TF single-click + double-click packs; cheerful_wave is already core."""
 from pathlib import Path
 import hashlib,json,struct
 
@@ -16,7 +16,7 @@ def main():
      assert data[:4]==b'WHP2' and struct.unpack_from('<II',data,8)==(208,196)
      offsets.append((len(blob),len(data),name));blob.extend(data)
     (assets/'click.bin').write_bytes(blob)
-    (assets/'click.h').write_text('#ifndef PET_CLICK_ASSETS_H\n#define PET_CLICK_ASSETS_H\n#include <stdint.h>\nextern const uint8_t click_blob[];\n'
+    (assets/'click.h').write_text('#ifndef PET_CLICK_ASSETS_H\n#define PET_CLICK_ASSETS_H\n#include <stdint.h>\n'
      '#define CLICK_SINGLE_COUNT 5\n#define CLICK_DOUBLE 6\n'
      'typedef struct { uint32_t offset,size; const char *name; } click_asset;\n'
      'static const click_asset click_assets[] = {\n'+

@@ -1,5 +1,7 @@
 #include "pet_voice.h"
 #include "pet_config.h"
+#include "pet_storage.h"
+#include "pet_ui.h"
 #include <FreeRTOS.h>
 #include <task.h>
 #include <lisa_mem.h>
@@ -18,6 +20,8 @@
 #define MAX_SAMPLES (16000*30)
 /* Energy endpointing: 1 s silence after >= 200 ms speech; 5 s no-speech timeout. */
 static int16_t *speech;
+/* Algorithm keeps these resources until shutdown. */
+static void *wake_model,*wake_wrap;
 static unsigned used, quiet, voiced;
 static int recording, pending, complete;
 static TaskHandle_t upload_task;
@@ -56,12 +60,14 @@ static void wake_event(uint32_t event,void *data,uint32_t len,void *priv) {
     cJSON *root=cJSON_ParseWithLength(data,len);
     cJSON *item=cJSON_GetArrayItem(cJSON_GetObjectItemCaseSensitive(root,"rlt"),0);
     cJSON *main=cJSON_GetObjectItemCaseSensitive(item,"bMain");
-    if(cJSON_IsNumber(main) && main->valueint==1) {
+    cJSON *keyword=cJSON_GetObjectItemCaseSensitive(item,"keyword");
+    if(cJSON_IsNumber(main) && main->valueint==1 && cJSON_IsString(keyword) &&
+       !strcmp(keyword->valuestring,pet_settings.wake_word)) {
         int notify=0;
         taskENTER_CRITICAL();
         if(!pending) { used=quiet=voiced=0; complete=0; pending=recording=1; notify=1; }
         taskEXIT_CRITICAL();
-        if(notify) xTaskNotifyGive(upload_task);
+        if(notify) { pet_ui_listening(1,0); xTaskNotifyGive(upload_task); }
     }
     cJSON_Delete(root);
 }
@@ -87,10 +93,11 @@ static void audio_event(const lisa_audio_event_t *event,void *unused) {
             int value=pcm[2*i]; speech[used++]=(int16_t)value;
             energy+=(unsigned)(value<0?-value:value);
         }
+        pet_ui_listening(1,samples?energy/samples:0);
         if(samples && energy/samples>=PET_VOICE_THRESHOLD) { voiced+=samples; quiet=0; }
         else quiet+=samples;
         if(used>=MAX_SAMPLES || (voiced>=3200 && quiet>=16000) || (voiced<3200 && used>=80000)) {
-            recording=0; complete=1;
+            recording=0; complete=1; pet_ui_listening(0,0);
         }
     }
     taskEXIT_CRITICAL();
@@ -125,6 +132,7 @@ static void upload(void *unused) {
             vTaskDelay(pdMS_TO_TICKS(20));
         }
         taskENTER_CRITICAL(); recording=0; unsigned count=used,voice=voiced; taskEXIT_CRITICAL();
+        pet_ui_listening(0,0);
         if(ok && voice>=3200) {
             snprintf(path,sizeof(path),"/voice/%s/audio",id);
             ok=!post(path,speech,count*2,response,sizeof(response));
@@ -139,10 +147,18 @@ static void upload(void *unused) {
     }
 }
 int pet_voice_init(void) {
+    if(!pet_settings.wake_word[0] || !pet_settings.wake_model[0] || !pet_settings.wake_wrap[0]) return -1;
+    size_t model_size,wrap_size;
+    wake_model=pet_storage_load(pet_settings.wake_model,2*1024*1024,&model_size);
+    wake_wrap=pet_storage_load(pet_settings.wake_wrap,64*1024,&wrap_size);
+    if(!wake_model || !wake_wrap) { lisa_mem_free(wake_model); lisa_mem_free(wake_wrap); return -1; }
+    acomp_wakeup_resource_config_t resources={
+        .mlp={.storage=ACOMP_WAKEUP_RES_STORAGE_PSRAM,.addr=(uintptr_t)wake_model,.size=model_size},
+        .wrap={.storage=ACOMP_WAKEUP_RES_STORAGE_PSRAM,.addr=(uintptr_t)wake_wrap,.size=wrap_size}};
     speech=lisa_mem_alloc(MAX_SAMPLES*2);
-    if(!speech) return -1;
+    if(!speech) { lisa_mem_free(wake_model); lisa_mem_free(wake_wrap); return -1; }
     ic_message_init();
-    if(acomp_init() || acomp_wakeup_init() || acomp_wakeup_prepare()) return -1;
+    if(acomp_init() || acomp_wakeup_init() || acomp_wakeup_prepare_with_resources(&resources)) return -1;
     acomp_stream_chn_create_desc_t tx={.cname="stream.mix2ch",.direction=ACOMP_STREAM_DIRECTION_M2R,
         .index=0,.buffer_size=ACOMP_WAKEUP_AUDIO_INPUT_LEN_ONCE_FRAME,.num_descs=4,.kick_policy=1};
     acomp_stream_chn_create_desc_t rx={.cname="stream.tocloud",.direction=ACOMP_STREAM_DIRECTION_R2M,

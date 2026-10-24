@@ -15,7 +15,7 @@ export function createExtras({now = () => new Date(), random = Math.random} = {}
       if (!catalog.some(c=>c.id===id)) { res.writeHead(404); res.end(); return true; }
       queued=id; res.writeHead(202); res.end(); return true;
     }
-    if (req.method==='GET' && req.url==='/pet/next') {
+    if (req.method==='GET' && (req.url==='/pet/next' || req.url==='/pet/next-id')) {
       if (!catalog.length) { res.writeHead(204); res.end(); return true; }
       const date=now(), month=date.getMonth()+1, day=date.getDate();
       // Seasonal/festival weights; every category remains reachable year-round.
@@ -37,6 +37,10 @@ export function createExtras({now = () => new Date(), random = Math.random} = {}
         pool=fresh.length ? fresh : festive;
       }
       const clip=catalog.find(c=>c.id===queued) ?? pool[Math.floor(random()*pool.length)] ?? catalog[0];
+      if (req.url==='/pet/next-id') {
+        res.writeHead(200,{'Content-Type':'text/plain','Content-Length':Buffer.byteLength(clip.id),'Connection':'close'});
+        res.end(clip.id); queued=null; previous=clip.id; return true;
+      }
       try {
         const data=readFileSync(new URL(`${clip.id}.bin`,assets));
         res.writeHead(200,{'Content-Type':'application/octet-stream','Content-Length':data.length,'X-Animation':clip.id,'Connection':'close'});

@@ -2,15 +2,16 @@
 set -e
 PROJECT_ROOT=$(cd "$(dirname "$0")/.." && pwd)
 SDK_ROOT=${SDK_ROOT:-"$PROJECT_ROOT/.deps/arcs_mini"}
-: "${PET_BRIDGE_IP:?Set PET_BRIDGE_IP to a host IPv4 address reachable by Lisem (not loopback)}"
-: "${BRIDGE_TOKEN:?Set BRIDGE_TOKEN for the bridge and firmware}"
-# SDK environment probing uses expected nonzero return codes internally.
+if [ "${PET_BOARD:-arcs_mini}" != arcs_mini ]; then
+  echo 'Only arcs_mini currently has a validated voice AP/CP layout; arcs_mini3 voice is not supported.' >&2
+  exit 1
+fi
 set +e
 source "$SDK_ROOT/arcs-sdk/env.sh" ""
 setup_status=$?
 set -e
 if [ "$setup_status" -ne 0 ]; then exit "$setup_status"; fi
-bash "$SDK_ROOT/build.sh" -S "$PROJECT_ROOT/firmware" -B "$PROJECT_ROOT/build/firmware" \
-  -DBOARD=arcs_mini "-DPET_BRIDGE_IP=$PET_BRIDGE_IP" \
-  "-DPET_BRIDGE_PORT=${BRIDGE_PORT:-8787}" "-DPET_BRIDGE_TOKEN=$BRIDGE_TOKEN" \
-  "-DPET_WIFI_SSID=${PET_WIFI_SSID:-Lisem}" "-DPET_WIFI_PASSWORD=${PET_WIFI_PASSWORD:-}" "$@"
+bash "$SDK_ROOT/build.sh" -S "$PROJECT_ROOT/firmware" -B "$PROJECT_ROOT/build/voice" \
+  -DBOARD=arcs_mini "-DCONFIG_FILES=prj.conf;voice.conf" \
+  "$@"
+python3 "$PROJECT_ROOT/scripts/pack-voice-image.py" "$SDK_ROOT" "$PROJECT_ROOT/build/voice"

@@ -1,5 +1,6 @@
 #include "pet_extra.h"
 #include "pet_config.h"
+#include "pet_storage.h"
 #include <FreeRTOS.h>
 #include <task.h>
 #include <lisa_mem.h>
@@ -31,7 +32,7 @@ static uint8_t *fetch(size_t *length) {
     inet_pton(AF_INET,PET_BRIDGE_IP,&addr.sin_addr);
     if(connect(fd,(struct sockaddr*)&addr,sizeof(addr))) goto done;
     char header[1024];
-    int n=snprintf(header,sizeof(header),"GET /pet/next HTTP/1.0\r\nHost: %s\r\nAuthorization: Bearer %s\r\nConnection: close\r\n\r\n",PET_BRIDGE_IP,PET_BRIDGE_TOKEN);
+    int n=snprintf(header,sizeof(header),"GET /pet/next-id HTTP/1.0\r\nHost: %s\r\nAuthorization: Bearer %s\r\nConnection: close\r\n\r\n",PET_BRIDGE_IP,PET_BRIDGE_TOKEN);
     if(n<0 || n>=(int)sizeof(header)) goto done;
     for(int sent=0;sent<n;) { int k=send(fd,header+sent,n-sent,0); if(k<=0) goto done; sent+=k; }
     size_t used=0;
@@ -46,16 +47,18 @@ static uint8_t *fetch(size_t *length) {
     char *len=strstr(header,"\r\ncontent-length: ");
     if(!len || strstr(header,"transfer-encoding:")) goto done;
     unsigned long size=strtoul(len+18,NULL,10);
-    if(size<532 || size>LIMIT) goto done;
-    data=lisa_mem_alloc(size); if(!data) goto done;
+    if(!size || size>80) goto done;
+    char name[81];
     for(used=0;used<size;) {
-        n=recv(fd,data+used,size-used,0);
-        if(n<=0) { lisa_mem_free(data); data=NULL; goto done; }
-        used+=n;
+        n=recv(fd,name+used,size-used,0); if(n<=0) goto done; used+=(size_t)n;
     }
-    *length=size;
-    char *name=strstr(header,"\r\nx-animation: ");
-    if(name) { name+=15; char *end=strchr(name,'\r'); if(end) *end=0; printf("[pet-ui] extra downloaded=%s bytes=%lu\n",name,size); }
+    name[size]=0;
+    for(size_t i=0;i<size;i++)
+        if(!((name[i]>='a' && name[i]<='z') || (name[i]>='0' && name[i]<='9') || name[i]=='_')) goto done;
+    char path[96]; snprintf(path,sizeof(path),"extras/%s.bin",name);
+    data=pet_storage_load(path,LIMIT,length);
+    if(data) printf("[pet-ui] extra TF=%s bytes=%u\n",name,(unsigned)*length);
+
 done:
     closesocket(fd); return data;
 }

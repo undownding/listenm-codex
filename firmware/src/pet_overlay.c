@@ -19,15 +19,9 @@ static int read_at(unsigned i,size_t offset,void *buf,size_t size) {
 }
 #else
 #include <lisa_mem.h>
-#include <lisa_device.h>
-#include <lisa_gpio.h>
-#include <lisa_sdmmc.h>
-#include <board.h>
 #include <lsfs.h>
-#include <disk/disk_access.h>
 static struct lsfs_file_t files[3];
 static int opened[3];
-static struct lsfs_mount_t mount={.type=LSFS_FATFS,.mnt_point="/SD:"};
 static int open_file(unsigned i,const char *name,size_t size) {
     char path[64]; snprintf(path,sizeof(path),"/SD:/%s",name);
     lsfs_file_t_init(&files[i]);
@@ -61,19 +55,6 @@ void pet_overlay_close(void) {
     lisa_mem_free(scratch); scratch=NULL;
 }
 void pet_overlay_init(size_t whale_size,size_t click_size) {
-#ifndef LISTENM_HOST
-#ifdef TF_DET_DEVICE_NAME
-    lisa_device_t *det=lisa_device_get(TF_DET_DEVICE_NAME);
-    if(!det || lisa_gpio_configure(det,TF_DET_PIN,LISA_GPIO_INPUT) ||
-       lisa_gpio_read_pin(det,TF_DET_PIN)!=TF_DET_ACTIVE_LEVEL) return;
-#endif
-    disk_init(NULL);
-    lsfs_init();
-    lisa_device_t *sd=lisa_device_get("sdmmc0");
-    if(!sd || lisa_sdmmc_probe(sd) || lsfs_mount(&mount)) {
-        printf("[overlay] TF unavailable; using Flash\n"); return;
-    }
-#endif
     const char *names[]={"background.rgb565","whale.bin","click.bin"};
     lengths[0]=240*240*2; lengths[1]=whale_size; lengths[2]=click_size;
     for(unsigned i=0;i<3;i++) {
@@ -105,7 +86,11 @@ int pet_overlay_frame(int click,size_t palette,size_t begin,size_t end,uint16_t 
     memcpy(pixels,scratch,PIXELS*2);
     return 0;
 fail:
-    printf("[overlay] %s invalid/read failed; using Flash\n",click?"click.bin":"whale.bin");
+    printf("[overlay] %s invalid/read failed; stopping animation\n",click?"click.bin":"whale.bin");
     close_file(i); active[i]=0;
     return -1;
+}
+
+int pet_overlay_read_click(size_t offset,void *data,size_t size) {
+    return !active[2] || offset>lengths[2] || size>lengths[2]-offset ? -1:read_at(2,offset,data,size);
 }

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Real Lisem TF overlay acceptance. Requires Pillow, pyfatfs and mkfs.fat."""
+"""Real Lisem required TF resource acceptance. Requires Pillow, pyfatfs and mkfs.fat."""
 import json
 import os
 from pathlib import Path
@@ -30,6 +30,12 @@ def card(name, background, animations=False):
     fs = PyFatFS(str(path))
     try:
         fs.writebytes('background.rgb565', background)
+        fs.writebytes('status-font.bin',(ROOT/'firmware/assets/status-font.bin').read_bytes())
+        fs.writebytes('config.ini', (ROOT/'config/config.example.ini').read_bytes())
+        fs.makedir('voice')
+        source=ROOT/'.deps/arcs_mini/arcs-sdk/samples/algorithms/wake_up/wakeup_single/res/algo'
+        for name in ('algo.bin','wrap.json'):
+            fs.writebytes('voice/'+name,(source/name).read_bytes())
         if animations:
             for asset in ('whale.bin', 'click.bin'):
                 fs.writebytes(asset, (ROOT / 'firmware/assets' / asset).read_bytes())
@@ -55,7 +61,7 @@ for scenario, medium in [('valid', valid), ('no-card', None), ('truncated', brok
     cursor = 0
     try:
         instance = cli('create', '--board', 'arcs-mini', '--name', 'Overlay ' + scenario)['id']
-        cli('write', instance, str(ROOT / 'build/firmware/listenm-pet.bin'))
+        cli('write', instance, str(ROOT / 'build/voice/listenm-voice-full.bin'))
         if medium:
             cli('sd-card', instance, '--image', str(medium))
         cli('start', instance, '--seconds', '100', '--timeout', '150')
@@ -79,7 +85,13 @@ for scenario, medium in [('valid', valid), ('no-card', None), ('truncated', brok
             cli('screenshot', instance, str(target))
             return Image.open(target).convert('RGB')
 
+        if scenario != 'valid':
+            wait('TF/config.ini missing or invalid' if scenario == 'no-card' else 'display/asset failure')
+            assert 'display ready' not in text
+            results.append({'scenario': scenario, 'passed': True})
+            continue
         wait('display ready')
+        wait('[voice] wake word ready')
         time.sleep(1)
         first = capture('idle-0')
         time.sleep(.7)
@@ -106,18 +118,11 @@ for scenario, medium in [('valid', valid), ('no-card', None), ('truncated', brok
             assert ImageChops.difference(first_click, second_click).getbbox(), 'click animation frozen'
             wait('click finished; idle buffer', start)
             assert 'invalid/read failed' not in text, text
-        else:
-            assert not is_gold, 'failed to fall back to Flash background'
-            assert '[overlay] TF background.rgb565' not in text
         assert 'display/asset failure' not in text
         results.append({'scenario': scenario, 'passed': True, 'corners': corners})
     finally:
         if instance:
             cli('shutdown', instance)
-# Both failure cases must show the exact same built-in background at the border.
-a = Image.open(work / 'no-card-idle-0.png')
-b = Image.open(work / 'truncated-idle-0.png')
-assert list(a.crop((0, 0, 240, 4)).getdata()) == list(b.crop((0, 0, 240, 4)).getdata())
 result = {'passed': True, 'checks': results, 'artifacts': str(work)}
 (work / 'result.json').write_text(json.dumps(result, indent=2))
 print(json.dumps(result, indent=2))
