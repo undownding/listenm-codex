@@ -64,9 +64,10 @@ The background is cached once; core and click frames stream from TF. Extra packs
 are loaded one at a time, with a 1.75 MB cap. Wake resources are kept in PSRAM for
 the lifetime of the voice algorithm. AP/CP executable code remains in Flash.
 
-Missing configuration stops startup. Missing, truncated or malformed mandatory
-animation resources stop rendering and produce a UART diagnostic; there is no
-Flash fallback. A missing extra pack is skipped. A corrupt frame is decoded
+Missing configuration stops normal startup. Missing, truncated or malformed mandatory
+resources stop animation playback and display the built-in `resource-missing.png`
+screen, with a UART diagnostic. This emergency screen is the only embedded image;
+its Chinese text is self-contained and does not need the TF font or background. A missing extra pack is skipped. A corrupt frame is decoded
 atomically. Insert/replace files before boot and restart; hot swaps are unsupported.
 
 ## Status font
@@ -89,3 +90,18 @@ python3 scripts/pack-font.py /usr/share/fonts/opentype/noto/NotoSansCJK-Medium.t
 ```
 
 The generated resource is committed; normal builds do not require system fonts.
+
+## Missing-resource screen
+
+`resource-missing.png` is a 240×240 status screen with a TF-card pictogram and the
+Chinese message “资源缺失 / 请检查 TF 卡 / 补齐资源后重启”. Its generated
+`resource_missing.h` contains about 13 KiB of RGB565 run-length data compiled into
+the firmware. It is displayed for missing TF/configuration, background, core/click
+packs or status font, and on mandatory frame decode/read failures. Optional extra
+packs remain skippable. Restart after restoring the files.
+
+```bash
+python3 scripts/pack-resource-error.py /usr/share/fonts/opentype/noto/NotoSansCJK-Medium.ttc --index 2
+```
+
+Text uses the same Noto Sans CJK SC font and OFL license as the status atlas.

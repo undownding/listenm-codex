@@ -42,7 +42,11 @@ static void connection(wifi_mgr_connection_info_t *info, void *arg) {
 int main(int argc, char **argv) {
     (void)argc; (void)argv;
     printf("[pet] listenm receiver boot\n");
-    if (pet_storage_init() || pet_config_load()) { printf("[pet] TF/config.ini missing or invalid; startup stopped\n"); return -1; }
+    if (pet_storage_init() || pet_config_load()) {
+        printf("[pet] TF/config.ini missing or invalid; startup stopped\n");
+        if(pet_ui_resource_error()) printf("[pet-ui] error screen task creation failed\n");
+        return -1;
+    }
     if (pet_ui_init()) { printf("[pet-ui] task creation failed\n"); return -1; }
     network = xEventGroupCreate();
     mac_manager_config_t config = {.random_mac_if_mac_invalid = false};

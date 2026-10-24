@@ -24,7 +24,8 @@ ARCS Mini SDK、Lisem 和原始 WebM 仓库下载至被忽略的 `.deps/`，不�
 
 ## Chinese status font
 
-`firmware/assets/status-font.bin` contains rasterized labels from Noto Sans CJK SC
+`firmware/assets/status-font.bin` and the `resource-missing.png` /
+`resource_missing.h` emergency screen contain rasterized labels from Noto Sans CJK SC
 Medium, by the Noto/Source Han contributors, licensed under SIL OFL 1.1.
 Source: https://github.com/notofonts/noto-cjk/tree/main/Sans
 License: [noto-sans-cjk-OFL.txt](licenses/noto-sans-cjk-OFL.txt).

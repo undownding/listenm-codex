@@ -7,7 +7,7 @@ import struct
 import subprocess
 import tempfile
 import time
-from PIL import Image, ImageChops
+from PIL import Image, ImageChops, ImageStat
 from pyfatfs.PyFatFS import PyFatFS
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -22,15 +22,15 @@ def cli(*args):
         text=True, timeout=30))
 
 
-def card(name, background, animations=False):
+def card(name, background, animations=False, omit=None):
     path = work / (name + '.img')
     with path.open('wb') as stream:
         stream.truncate(64 * 1024 * 1024)
     subprocess.run(['mkfs.fat', '-F', '16', str(path)], check=True, stdout=subprocess.DEVNULL)
     fs = PyFatFS(str(path))
     try:
-        fs.writebytes('background.rgb565', background)
-        fs.writebytes('status-font.bin',(ROOT/'firmware/assets/status-font.bin').read_bytes())
+        if omit != 'background.rgb565': fs.writebytes('background.rgb565', background)
+        if omit != 'status-font.bin': fs.writebytes('status-font.bin',(ROOT/'firmware/assets/status-font.bin').read_bytes())
         fs.writebytes('config.ini', (ROOT/'config/config.example.ini').read_bytes())
         fs.makedir('voice')
         source=ROOT/'.deps/arcs_mini/arcs-sdk/samples/algorithms/wake_up/wakeup_single/res/algo'
@@ -38,7 +38,7 @@ def card(name, background, animations=False):
             fs.writebytes('voice/'+name,(source/name).read_bytes())
         if animations:
             for asset in ('whale.bin', 'click.bin'):
-                fs.writebytes(asset, (ROOT / 'firmware/assets' / asset).read_bytes())
+                if omit != asset: fs.writebytes(asset, (ROOT / 'firmware/assets' / asset).read_bytes())
     finally:
         fs.close()
     return path
@@ -53,9 +53,16 @@ pixels = [gold if x < 16 or x >= 224 or y < 23 or y >= 219
 background = struct.pack('<57600H', *pixels)
 (work / 'background.rgb565').write_bytes(background)
 valid = card('valid', background, True)
-broken = card('truncated', b'broken')
+broken = card('truncated', b'broken', True)
+scenarios=[('valid', valid), ('no-card', None), ('truncated', broken)]
+for name in ('background.rgb565','whale.bin','click.bin','status-font.bin'):
+    scenario='missing-'+name.split('.')[0]
+    scenarios.append((scenario,card(scenario,background,True,omit=name)))
+fallback=Image.open(ROOT/'firmware/assets/resource-missing.png').convert('RGB')
+# Hardware conversion to RGB565 and 95% backlight produces small rounding differences.
+fallback=fallback.point(lambda value: int(value*.95))
 results = []
-for scenario, medium in [('valid', valid), ('no-card', None), ('truncated', broken)]:
+for scenario, medium in scenarios:
     instance = None
     text = ''
     cursor = 0
@@ -87,7 +94,10 @@ for scenario, medium in [('valid', valid), ('no-card', None), ('truncated', brok
 
         if scenario != 'valid':
             wait('TF/config.ini missing or invalid' if scenario == 'no-card' else 'display/asset failure')
-            assert 'display ready' not in text
+            wait('resource missing screen shown')
+            shown=capture('error')
+            difference=ImageStat.Stat(ImageChops.difference(shown,fallback))
+            assert max(difference.mean)<4, f'{scenario}: wrong fallback image {difference.mean}'
             results.append({'scenario': scenario, 'passed': True})
             continue
         wait('display ready')

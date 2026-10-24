@@ -1,6 +1,7 @@
 #include "pet_ui.h"
 #include "pet_storage.h"
 #include "pet_text.h"
+#include "pet_resource_error.h"
 #include "pet_model.h"
 #include "pet_extra.h"
 #include "pet_pack.h"
@@ -122,13 +123,33 @@ static int display_init(lisa_device_t **out) {
        lisa_display_set_brightness(*out,95)) return -1;
     return 0;
 }
-static void render(void *unused) {
-    (void)unused;
-    lisa_device_t *display;
+static int present(lisa_device_t *display,uint16_t *screen) {
+    lisa_display_buffer_desc_t desc={.width=240,.height=240,.buf_size=240*240*2};
+    // Match the physical panel mounting while retaining full-screen DMA.
+#ifdef CONFIG_BOARD_ARCS_MINI3
+    for(unsigned i=0;i<240*240/2;i++) {
+        uint16_t t=screen[i]; screen[i]=screen[240*240-1-i]; screen[240*240-1-i]=t;
+    }
+#else
+    for(unsigned y=0;y<240;y++) for(unsigned x=y+1;x<240;x++) {
+        uint16_t t=screen[y*240+x]; screen[y*240+x]=screen[x*240+y]; screen[x*240+y]=t;
+    }
+    for(unsigned y=0;y<240;y++) for(unsigned x=0;x<120;x++) {
+        uint16_t t=screen[y*240+x]; screen[y*240+x]=screen[y*240+239-x]; screen[y*240+239-x]=t;
+    }
+#endif
+    return lisa_display_write(display,0,0,&desc,screen);
+}
+static void render(void *force_error) {
+    lisa_device_t *display=NULL;
+    int display_ready=0;
+    uint8_t *extra=NULL;
     uint16_t *background=NULL;
     uint8_t *font=NULL; size_t font_size=0;
     uint16_t *screen=lisa_mem_alloc(240*240*2), *sprite=lisa_mem_alloc(WHALE_WIDTH*WHALE_HEIGHT*2);
-    if(!screen || !sprite || display_init(&display)) goto fail;
+    if(!screen || display_init(&display)) goto fail;
+    display_ready=1;
+    if(force_error || !sprite) goto fail;
     size_t click_size=0;
     for(unsigned i=0;i<sizeof(click_assets)/sizeof(click_assets[0]);i++)
         if(click_assets[i].offset+click_assets[i].size>click_size) click_size=click_assets[i].offset+click_assets[i].size;
@@ -142,10 +163,9 @@ static void render(void *unused) {
     font=pet_storage_load("status-font.bin",PET_TEXT_SIZE,&font_size);
     if(pet_text_validate(font,font_size)) goto fail;
     const uint16_t *backdrop=background;
-    uint8_t *extra=NULL; size_t extra_size=0; unsigned extra_frame=0;
+    size_t extra_size=0; unsigned extra_frame=0;
     int interaction=0,buffering=0; unsigned interaction_frame=0; uint32_t buffer_started=0;
     unsigned frame=0; pet_state previous=PET_STATE_COUNT; int previous_link=-1;
-    lisa_display_buffer_desc_t desc={.width=240,.height=240,.buf_size=240*240*2};
     TickType_t wake=xTaskGetTickCount();
     printf("[pet-ui] display ready 240x240 fps=%d\n",WHALE_FPS);
     for(;;) {
@@ -208,20 +228,7 @@ static void render(void *unused) {
                     screen[(PET_TEXT_BOTTOM-5-y)*240+94+bar*6+x]=INK;
             }
         }
-        // Match the physical panel mounting while retaining full-screen DMA.
-#ifdef CONFIG_BOARD_ARCS_MINI3
-        for(unsigned i=0;i<240*240/2;i++) {
-            uint16_t t=screen[i]; screen[i]=screen[240*240-1-i]; screen[240*240-1-i]=t;
-        }
-#else
-        for(unsigned y=0;y<240;y++) for(unsigned x=y+1;x<240;x++) {
-            uint16_t t=screen[y*240+x]; screen[y*240+x]=screen[x*240+y]; screen[x*240+y]=t;
-        }
-        for(unsigned y=0;y<240;y++) for(unsigned x=0;x<120;x++) {
-            uint16_t t=screen[y*240+x]; screen[y*240+x]=screen[y*240+239-x]; screen[y*240+239-x]=t;
-        }
-#endif
-        if(lisa_display_write(display,0,0,&desc,screen)) goto fail;
+        if(present(display,screen)) goto fail;
         if(extra && (++extra_frame)>=pet_u32(extra+4)) { lisa_mem_free(extra); extra=NULL; printf("[pet-ui] extra finished\n"); }
         if(interaction) {
             unsigned count=!click_assets[interaction-1].size?whale_clips[PET_SPEAKING].count:click_counts[interaction-1];
@@ -235,6 +242,11 @@ static void render(void *unused) {
     }
 fail:
     printf("[pet-ui] display/asset failure\n");
+    size_t pending_size;
+    lisa_mem_free(pet_extra_take(0,&pending_size));
+    lisa_mem_free(extra);
+    if(display_ready && !pet_resource_error_draw(screen,240*240) && !present(display,screen))
+        printf("[pet-ui] resource missing screen shown\n");
     pet_overlay_close();
     lisa_mem_free(click_offsets); click_offsets=NULL;
     lisa_mem_free(font);
@@ -248,5 +260,11 @@ int pet_ui_init(void) {
     if(pet_extra_init()) printf("[pet-ui] extras unavailable\n");
     if(xTaskCreate(button_task,"pet-button",2048,NULL,tskIDLE_PRIORITY+1,NULL)!=pdPASS)
         printf("[pet-ui] function key task unavailable\n");
+    started=1; return 0;
+}
+
+int pet_ui_resource_error(void) {
+    if(started) return -1;
+    if(xTaskCreate(render,"pet-error",4096,(void *)1,tskIDLE_PRIORITY+1,NULL)!=pdPASS) return -1;
     started=1; return 0;
 }
