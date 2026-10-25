@@ -16,9 +16,22 @@ int main(void) {
         char buf[4096]; snprintf(buf,sizeof(buf),"%s%s\n",valid,bad[i]);
         pet_config old=c; assert(pet_config_parse(buf,strlen(buf),&c)==-1); assert(!memcmp(&old,&c,sizeof(c)));
     }
-    const char *ips[]={"256.1.1.1","1.2.3","1.2.3.4.5","1.2.3.4x","01.2.3.4","+1.2.3.4","1. 2.3.4"};
+    const char *ips[]={"256.1.1.1","1.2.3","1.2.3.4.5","01.2.3.4","+1.2.3.4","1. 2.3.4"};
     for(unsigned i=0;i<sizeof(ips)/sizeof(ips[0]);i++) {
-        char buf[512]; snprintf(buf,sizeof(buf),"bridge_ip=%s\nbridge_token=x\nwifi_ssid=x\n",ips[i]);
+        char buf[512]; snprintf(buf,sizeof(buf),"bridge_ip=%s\n%s",ips[i],strchr(valid,'\n')+1);
+        assert(pet_config_parse(buf,strlen(buf),&c)==-1);
+    }
+    const char *names[]={"ubuntu-12700h","Ubuntu-12700h.LOCAL.","ubuntu-12700h.tail93282.ts.net"};
+    for(unsigned i=0;i<sizeof(names)/sizeof(names[0]);i++) {
+        char buf[1024]; snprintf(buf,sizeof(buf),"bridge_ip=%s\n%s",names[i],strchr(valid,'\n')+1);
+        assert(!pet_config_parse(buf,strlen(buf),&c));
+        if(i==1) assert(!strcmp(c.bridge_ip,"ubuntu-12700h.local"));
+    }
+    const char *invalid_hosts[]={"", "-host", "host-", "a..local", ".local", "host:8787",
+        "http://host", "host name", "host/path", "host@local", "[::1]",
+        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.local"};
+    for(unsigned i=0;i<sizeof(invalid_hosts)/sizeof(invalid_hosts[0]);i++) {
+        char buf[1024]; snprintf(buf,sizeof(buf),"bridge_ip=%s\n%s",invalid_hosts[i],strchr(valid,'\n')+1);
         assert(pet_config_parse(buf,strlen(buf),&c)==-1);
     }
     char bounds[512]; snprintf(bounds,sizeof(bounds),"%sbridge_port=65535\nvoice_threshold=32767\n",valid);

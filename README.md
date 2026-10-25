@@ -104,7 +104,7 @@ ADB 脚本自动进入 Recovery，逐个写入 AP/CP 并完整读回比较，再
 | --- | --- |
 | `BRIDGE_HOST` / `BRIDGE_PORT` | 默认 `127.0.0.1:8787`；仿真器联调使用宿主网卡地址 |
 | `BRIDGE_TOKEN` | bridge 鉴权与固件连接 token；非回环监听必填 |
-| TF `config.ini` | 设备网络、token、唤醒词、模型路径和录音阈值，见 [配置示例](config/config.example.ini) |
+| TF `config.ini` | 设备网络、token、唤醒词、模型路径和录音阈值；`bridge_ip` 支持 IPv4、DNS 名称，短名失败后自动尝试 `.local`，见 [配置示例](config/config.example.ini) |
 | `CODEX_SESSIONS_DIR` | 覆盖默认 `$CODEX_HOME/sessions` 日志目录 |
 | `BRIDGE_WATCH=0` | 关闭日志监听，只接收外部输入 |
 

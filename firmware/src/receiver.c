@@ -1,3 +1,4 @@
+#include "pet_net.h"
 #include "receiver.h"
 #include "sse.h"
 #include <stdio.h>
@@ -34,7 +35,7 @@ int receiver_run(const char *host, unsigned port, const char *token, char last_i
     setsockopt(fd, SOL_SOCKET, SO_SNDTIMEO, &timeout, sizeof(timeout));
     struct sockaddr_in addr = {0};
     addr.sin_family = AF_INET; addr.sin_port = htons(port);
-    if (inet_pton(AF_INET, host, &addr.sin_addr) != 1) goto done;
+    if (pet_resolve_ipv4(host, &addr.sin_addr)) goto done;
     if (connect(fd, (struct sockaddr *)&addr, sizeof(addr))) goto done;
     char request[768];
     if (strpbrk(token, "\r\n") || strpbrk(last_id, "\r\n")) goto done;

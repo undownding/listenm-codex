@@ -18,7 +18,8 @@ build_dir = 'voice-mini3' if board == 'arcs_mini3' else 'voice'
 CLI = Path(os.environ.get('LISEM_BIN', ROOT / '.deps/Lisem/lisem'))
 from tf_image import create_card
 host = os.environ.get('PET_TEST_HOST', '172.17.0.1')
-port, token = '18787', 'isolated-tf-test-token'
+port = os.environ.get('PET_TEST_PORT', '18787')
+token = 'isolated-tf-test-token'
 (ROOT / 'artifacts').mkdir(exist_ok=True)
 work = Path(tempfile.mkdtemp(prefix='lisem-e2e-', dir=ROOT / 'artifacts'))
 sessions = work / 'sessions'
@@ -79,7 +80,8 @@ try:
     bridge = start_bridge()
     instance = json.loads(cli('create','--board',board.replace('_','-'),'--name','listenm-e2e'))['id']
     cli('write',instance,str(ROOT/'build'/build_dir/'listenm-voice-full.bin'))
-    cli('sd-card',instance,'--image',str(create_card(work,host,port,token)))
+    device_host = os.environ.get('PET_TEST_BRIDGE_NAME', host)
+    cli('sd-card',instance,'--image',str(create_card(work,device_host,port,token)))
     cli('start',instance,'--network','--seconds','360','--timeout','480')
     wait_for(lambda text:'[pet] SSE connected' in text)
     wait_for(lambda text:'[pet-ui] display ready' in text)
@@ -141,6 +143,7 @@ try:
     append('event_msg','turn_aborted')
     wait_for(lambda text:'"type":"turn_aborted"' in text)
     result = {'passed':True,'fixture':'synthetic Codex rollout and hook inputs','instance':instance,
+              'bridge_host':device_host,
               'checks':['TF model wake engine initialization','Wi-Fi DHCP','SSE TCP connection','seven state animations','nonblank display and changing frames','bridge restart/reset/reconnect','festival TF playback','game playback/completion','Codex preempts extras'],
               'uart':str(work/'uart.log')}
     (work/'result.json').write_text(json.dumps(result,indent=2)+'\n')

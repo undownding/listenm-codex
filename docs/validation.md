@@ -84,7 +84,7 @@
 
 本地 Codex Desktop 会话曾实际驱动固件接收 `custom_tool_call`、`custom_tool_call_output`、`reasoning`、`message` 状态。网络仅传输白名单元数据，不含消息正文。真实会话日志、线程 ID、本机实例身份、截图中间文件和编译网络配置保留在被忽略的 `artifacts/`、`build/`，不随公共仓库发布。
 
-尚未通过验证：ListenM 实物烧录与启动、实机 WPA2 接入、长期运行、多个会话的优先级仲裁。仿真 WPA2 接入已在下面的复查中验证。当前功能针对本地开发网络；固件不支持 TLS、DNS 或任意第三方 SSE 服务。
+尚未通过验证：ListenM 实物烧录与启动、实机 WPA2 接入、长期运行、多个会话的优先级仲裁。仿真 WPA2 接入已在下面的复查中验证。该次验证时功能针对本地开发网络，固件尚不支持 TLS、DNS 或任意第三方 SSE 服务；后续 DNS/mDNS 支持见下文。
 
 ## 实机首次烧录与仿真复查（2026-10-22）
 
@@ -186,3 +186,31 @@ USB 验收使用真实固件的 USB 协议，通过 Lisem 的 TCP USB 桥接运�
 写入完成时电脑尚未枚举出板子 ADB；实体正常启动与 USB 连接验证另行记录。
 
 用户随后反馈实体测试成功。该结论为用户实测反馈；本次未另外采集实机启动或 ADB 日志。
+
+## 主机名与 mDNS 回退（2026-10-25）
+
+`bridge_ip` 保持兼容原有配置键，现在支持 IPv4、短主机名及完整域名。
+短主机名先查询当前网络 DNS，失败或仅返回回环等不可用远端地址时查询
+`NAME.local`；带点的完整域名不再追加后缀。SSE、语音上传、彩蛋请求使用同一解析入口。
+
+主机测试覆盖域名格式、大小写/末尾点规范化、DNS 优先、失败回退、回环结果回退、
+完整域名失败及结果释放。`scripts/test.sh` 全部通过（9 项 C 测试）；Mini/Mini3 均构建成功。
+
+真实 RISC-V 仿真通过系统现有 mDNS 服务解析 `ubuntu-12700h.local`，获得
+`192.168.31.108`，完成原有全部显示/语音初始化/联网验收。短名测试中，宿主 DNS
+返回 `127.0.1.1`，固件排除它后通过 mDNS 找到 LAN 地址，完成 SSE、七种状态动画、
+彩蛋打断、游戏结束和 bridge 重连。记录分别位于：
+
+- `artifacts/lisem-e2e-09pbs6lg/result.json`：显式 `.local`。
+- `artifacts/lisem-e2e-1kv9_0_f/result.json`：短主机名回退。
+
+可用 `PET_BOARD=arcs_mini3 PET_TEST_HOST=192.168.31.108 PET_TEST_BRIDGE_NAME=ubuntu-12700h python scripts/verify-lisem.py`
+复测；宿主需实际发布对应 mDNS 名称，`PET_TEST_PORT` 可隔离 bridge 测试端口。
+
+随后通过 ADB 更新实机 `6d7b101a3b2bcba5`，AP/CP 全量读回一致，重启后应用 ADB
+重新连接。CP SHA-256 为 `428c76885c6508ec78821ea20f41db2aec60b11a7fef887295d67058ea4b05db`；
+日志为 `artifacts/mini3-flash/physical-mdns-adb.log`。Boot 未改动，未使用 TTL。
+
+本机 bridge 同时保留 LAN 地址 `192.168.31.108:8787` 并启动 Tailscale 地址
+`100.107.87.106:8787` 的监听，沿用同一 token，两个地址的鉴权健康检查通过。
+Tailscale 路径仍要求设备网络提供相应 DNS 与路由；未把局域网 mDNS 测试当作 tailnet 端到端验收。

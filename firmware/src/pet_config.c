@@ -51,12 +51,36 @@ int pet_config_parse(const char *data,size_t size,pet_config *out) {
         if(seen&(1u<<i)) return -1;
         seen|=1u<<i;
     }
-    const char *ip=c.bridge_ip;
-    for(unsigned i=0;i<4;i++) {
-        if(!isdigit((unsigned char)*ip) || (*ip=='0' && isdigit((unsigned char)ip[1]))) return -1;
-        unsigned n=0;
-        while(isdigit((unsigned char)*ip)) { n=n*10+(unsigned)(*ip++-'0'); if(n>255) return -1; }
-        if(i<3) { if(*ip++!='.') return -1; } else if(*ip) return -1;
+    /* Keep bridge_ip as the backwards-compatible key, accepting DNS names too. */
+    size_t length=strlen(c.bridge_ip);
+    if(length && c.bridge_ip[length-1]=='.') c.bridge_ip[--length]=0;
+    if(!length) return -1;
+    int numeric=1;
+    for(size_t i=0;i<length;i++) {
+        unsigned char ch=(unsigned char)c.bridge_ip[i];
+        if(ch>='A' && ch<='Z') c.bridge_ip[i]=(char)(ch-'A'+'a');
+        if(!(ch>='0' && ch<='9') && ch!='.') numeric=0;
+    }
+    if(numeric) {
+        const char *ip=c.bridge_ip;
+        for(unsigned i=0;i<4;i++) {
+            if(!isdigit((unsigned char)*ip) || (*ip=='0' && isdigit((unsigned char)ip[1]))) return -1;
+            unsigned n=0;
+            while(isdigit((unsigned char)*ip)) { n=n*10+(unsigned)(*ip++-'0'); if(n>255) return -1; }
+            if(i<3) { if(*ip++!='.') return -1; } else if(*ip) return -1;
+        }
+    } else {
+        size_t label=0;
+        for(size_t i=0;i<=length;i++) {
+            char ch=c.bridge_ip[i];
+            if(!ch || ch=='.') {
+                if(!label || c.bridge_ip[i-1]=='-') return -1;
+                label=0;
+            } else {
+                if(!((ch>='a' && ch<='z') || (ch>='0' && ch<='9') || ch=='-') ||
+                   (!label && ch=='-') || ++label>63) return -1;
+            }
+        }
     }
     if(!c.bridge_token[0] || !c.wifi_ssid[0] || !c.wake_word[0] || !c.wake_model[0] || !c.wake_wrap[0]) return -1;
     *out=c; return 0;

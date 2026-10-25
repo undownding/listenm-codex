@@ -1,3 +1,4 @@
+#include "pet_net.h"
 #include "pet_voice.h"
 #include "pet_config.h"
 #include "pet_storage.h"
@@ -37,7 +38,7 @@ static int post(const char *path,const void *body,size_t size,char *response,siz
     setsockopt(fd,SOL_SOCKET,SO_RCVTIMEO,&timeout,sizeof(timeout));
     setsockopt(fd,SOL_SOCKET,SO_SNDTIMEO,&timeout,sizeof(timeout));
     struct sockaddr_in addr={.sin_family=AF_INET,.sin_port=htons(PET_BRIDGE_PORT)};
-    if(inet_pton(AF_INET,PET_BRIDGE_IP,&addr.sin_addr)!=1 || connect(fd,(void*)&addr,sizeof(addr))) goto done;
+    if(pet_resolve_ipv4(PET_BRIDGE_IP,&addr.sin_addr) || connect(fd,(void*)&addr,sizeof(addr))) goto done;
     char header[1024];
     int n=snprintf(header,sizeof(header),"POST %s HTTP/1.0\r\nHost: %s\r\nAuthorization: Bearer %s\r\nContent-Type: application/octet-stream\r\nContent-Length: %u\r\nConnection: close\r\n\r\n",path,PET_BRIDGE_IP,PET_BRIDGE_TOKEN,(unsigned)size);
     if(n<0 || n>=(int)sizeof(header) || send_all(fd,header,n) || send_all(fd,body,size)) goto done;

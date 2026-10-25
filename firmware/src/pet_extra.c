@@ -1,3 +1,4 @@
+#include "pet_net.h"
 #include "pet_extra.h"
 #include "pet_config.h"
 #include "pet_storage.h"
@@ -28,7 +29,7 @@ static uint8_t *fetch(size_t *length) {
     setsockopt(fd,SOL_SOCKET,SO_RCVTIMEO,&timeout,sizeof(timeout));
     setsockopt(fd,SOL_SOCKET,SO_SNDTIMEO,&timeout,sizeof(timeout));
     struct sockaddr_in addr={.sin_family=AF_INET,.sin_port=htons(PET_BRIDGE_PORT)};
-    inet_pton(AF_INET,PET_BRIDGE_IP,&addr.sin_addr);
+    if(pet_resolve_ipv4(PET_BRIDGE_IP,&addr.sin_addr)) goto done;
     if(connect(fd,(struct sockaddr*)&addr,sizeof(addr))) goto done;
     char header[1024];
     int n=snprintf(header,sizeof(header),"GET /pet/next-id HTTP/1.0\r\nHost: %s\r\nAuthorization: Bearer %s\r\nConnection: close\r\n\r\n",PET_BRIDGE_IP,PET_BRIDGE_TOKEN);

@@ -37,6 +37,12 @@ python3 scripts/prepare-tf.py /你的/TF卡挂载目录
 # 编辑 config.ini，使 bridge_ip、bridge_token 与上述环境变量一致。
 ```
 
+TF 的 `bridge_ip` 也接受主机名，例如 `ubuntu-12700h`。固件先通过当前网络的 DNS
+解析短主机名，失败或只返回回环等不可用地址时再尝试 `ubuntu-12700h.local` 的 mDNS；完整域名只解析该域名。
+SSE、语音上传和彩蛋请求共用此规则，每次新建连接都调用解析器，由 lwIP 管理缓存有效期。
+使用 Tailscale 名称时，设备所在网络须提供相应 DNS 与路由；仅主机安装 Tailscale
+不会自动让 Wi-Fi 设备加入 tailnet。局域网可通过主机的 mDNS 发布发现地址。
+
 `PET_BRIDGE_IP` 必须换成本机实际存在的地址（可用 `hostname -I` 查看）。
 Lisem 正式 CLI 禁止宿主回环访问，不能填 `127.0.0.1` 或以网关
 `192.0.2.1` 绕到回环服务。token 在 bridge 和固件之间必须一致。当前是明文 HTTP，适用于可信开发网络。
@@ -150,7 +156,7 @@ SSE 每 15 秒发送注释心跳，保留最近 256 条事件、最多 16 个客
 
 固件使用有界缓冲处理 TCP 任意分片、LF/CRLF/CR、注释、多行 data；40 秒
 接收超时，断流后等待 2 秒重连。支持本 bridge 的 close-delimited HTTP
-响应；不支持 HTTPS、DNS、重定向或第三方 chunked SSE 服务。收到事件后
+响应；不支持 HTTPS、重定向或第三方 chunked SSE 服务。收到事件后
 输出完整 JSON，并通过 `pet_ui_event()` 校验 version/source/state 后更新动画。
 
 ## 屏幕动画

@@ -2,7 +2,7 @@
 #define PET_CONFIG_H
 #include <stddef.h>
 typedef struct {
-    char bridge_ip[16],bridge_token[256],wifi_ssid[32],wifi_password[64];
+    char bridge_ip[254],bridge_token[256],wifi_ssid[32],wifi_password[64];
     char wake_word[128],wake_model[96],wake_wrap[96];
     unsigned bridge_port,voice_threshold;
 } pet_config;
