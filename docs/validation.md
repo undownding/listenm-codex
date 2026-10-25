@@ -214,3 +214,26 @@ USB 验收使用真实固件的 USB 协议，通过 Lisem 的 TCP USB 桥接运�
 本机 bridge 同时保留 LAN 地址 `192.168.31.108:8787` 并启动 Tailscale 地址
 `100.107.87.106:8787` 的监听，沿用同一 token，两个地址的鉴权健康检查通过。
 Tailscale 路径仍要求设备网络提供相应 DNS 与路由；未把局域网 mDNS 测试当作 tailnet 端到端验收。
+
+### 实机待机无彩蛋排查（2026-10-25）
+
+局域网 bridge 原先仅记录启动，新增 `BRIDGE_LOG=1` 后记录状态、SSE 连接和已知
+HTTP 路由的响应状态，不记录 token、请求头或正文。临时关闭会话监听、发布 idle 并
+点播五子棋，持续观察 60 秒后恢复监听。北京时间 12:47:49，实机
+`192.168.31.181` 请求 `/pet/next-id`，bridge 返回 200；用户仍观察到待机。
+这确认了触发请求及服务端响应，不能证明实机完整接收、解析或读取 TF 成功。
+
+Mini3 原固件及新增诊断日志的固件均通过独立 Lisem 验收，包括圣诞树彩蛋、
+五子棋完整播放、工作事件打断和 bridge 重连。诊断版还使用与实机相同的
+`ubuntu-12700h` 短名，通过 `.local` 回退完成全部验收：
+
+- `artifacts/lisem-e2e-jb6thaes/result.json`：修改前固件，IPv4。
+- `artifacts/lisem-e2e-1jdlg8xa/result.json`：诊断固件，IPv4。
+- `artifacts/lisem-e2e-7a4hfj66/result.json`：诊断固件，实机短主机名。
+- `artifacts/device-bridge.log`：实机 bridge 请求记录。
+- `artifacts/extras-debug-tests.log`：16 项 Node、7 项 Python、9 项 C 测试通过。
+
+固件新增待机计时、响应接收阶段、选择被状态变化丢弃、TF 打开/头部/索引失败日志。
+仿真未复现实机故障，不能归因于 TF 缺失；诊断固件仅完成构建和仿真，按用户要求
+尚未更新实机。随后用户确认实机已恢复正常。根因尚未确定，本次提交保留诊断能力，
+不将恢复归因于尚未刷入实机的固件改动。

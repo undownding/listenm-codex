@@ -114,7 +114,9 @@ unsigned pet_overlay_extra_open(const char *name) {
         if(!((*p>='a' && *p<='z') || (*p>='0' && *p<='9') || *p=='_')) return 0;
     char path[128];
     if(snprintf(path,sizeof(path),"extras/%s.bin",name)>=(int)sizeof(path)) return 0;
+    const char *stage="open";
     if(open_file(3,path,0)) goto invalid;
+    stage="header";
     lengths[3]=file_length(3);
     uint8_t header[16], offset[4];
     if(lengths[3]<532 || lengths[3]>1750000 || read_at(3,0,header,16) ||
@@ -123,6 +125,7 @@ unsigned pet_overlay_extra_open(const char *name) {
     if(!extra_count || extra_count>600) goto invalid;
     extra_base=16+4*(extra_count+1);
     if(extra_base+512>lengths[3]) goto invalid;
+    stage="frame index";
     for(unsigned i=0;i<=extra_count;i++) {
         if(read_at(3,16+4*i,offset,4)) goto invalid;
         extra_offsets[i]=pet_u32(offset);
@@ -136,6 +139,7 @@ unsigned pet_overlay_extra_open(const char *name) {
     printf("[pet-ui] extra TF=%s bytes=%u\n",name,(unsigned)lengths[3]);
     return extra_count;
 invalid:
+    printf("[pet-extra] TF load failed path=%s stage=%s\n",path,stage);
     pet_overlay_extra_close(); return 0;
 }
 int pet_overlay_extra_frame(unsigned index,uint16_t *pixels) {

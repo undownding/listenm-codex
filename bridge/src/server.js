@@ -3,7 +3,7 @@ import {createExtras} from './extras.js';
 import {randomUUID, timingSafeEqual} from 'node:crypto';
 import {normalize} from './normalize.js';
 
-export function createBridge({token = '', heartbeatMs = 15000, historyLimit = 256, voice} = {}) {
+export function createBridge({token = '', heartbeatMs = 15000, historyLimit = 256, voice, log = () => {}} = {}) {
   const extras = createExtras();
   const epoch = randomUUID();
   let seq = 0;
@@ -12,6 +12,7 @@ export function createBridge({token = '', heartbeatMs = 15000, historyLimit = 25
     if (!res.write(frame)) { clients.delete(res); res.destroy(); }
   }
   function publish(event) {
+    log(`state=${event.state} type=${event.type}`);
     const item = {id: `${epoch}:${++seq}`, event};
     history.push(item);
     if (history.length > historyLimit) history.shift();
@@ -20,6 +21,11 @@ export function createBridge({token = '', heartbeatMs = 15000, historyLimit = 25
   }
   const frame = item => `id: ${item.id}\nevent: codex\ndata: ${JSON.stringify(item.event)}\n\n`;
   const server = http.createServer(async (req, res) => {
+    // Only known route names and connection metadata; never headers or bodies.
+    const route = ['/health', '/events', '/pet/catalog', '/pet/next-id', '/pet/next'].includes(req.url)
+      ? req.url : req.url.startsWith('/pet/play/') ? '/pet/play/:id' : 'other';
+    const peer = req.socket.remoteAddress;
+    res.on('finish', () => log(`http peer=${peer} route=${route} status=${res.statusCode}`));
     if (token) {
       const supplied = Buffer.from(req.headers.authorization ?? '');
       const expected = Buffer.from(`Bearer ${token}`);
@@ -48,7 +54,8 @@ export function createBridge({token = '', heartbeatMs = 15000, historyLimit = 25
       const replay = last && index >= 0 ? history.slice(index + 1) : history.slice(-1);
       for (const item of replay) send(res, frame(item));
       if (!res.destroyed) clients.add(res);
-      res.on('close', () => clients.delete(res)); return;
+      log(`sse connected peer=${peer} clients=${clients.size}`);
+      res.on('close', () => { clients.delete(res); log(`sse disconnected peer=${peer} clients=${clients.size}`); }); return;
     }
     if (req.method === 'POST' && req.url === '/ingest') {
       const chunks = []; let size = 0;

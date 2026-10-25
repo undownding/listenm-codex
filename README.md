@@ -107,6 +107,7 @@ ADB 脚本自动进入 Recovery，逐个写入 AP/CP 并完整读回比较，再
 | TF `config.ini` | 设备网络、token、唤醒词、模型路径和录音阈值；`bridge_ip` 支持 IPv4、DNS 名称，短名失败后自动尝试 `.local`，见 [配置示例](config/config.example.ini) |
 | `CODEX_SESSIONS_DIR` | 覆盖默认 `$CODEX_HOME/sessions` 日志目录 |
 | `BRIDGE_WATCH=0` | 关闭日志监听，只接收外部输入 |
+| `BRIDGE_LOG=1` | 输出带时间的状态、SSE 连接和彩蛋接口结果，排查待机不播放；不记录请求正文或 token |
 
 配置 token 后，所有 HTTP 接口都需 `Authorization: Bearer <token>`：
 

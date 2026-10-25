@@ -19,7 +19,8 @@ if (process.env.BRIDGE_VOICE === '1') {
   voice = createVoice({codex, onState, transcribe: createTranscriber({key: process.env.OPENAI_API_KEY,
     baseUrl: process.env.VOICE_ASR_BASE_URL, model: process.env.VOICE_ASR_MODEL})});
 }
-bridge = createBridge({token, voice});
+bridge = createBridge({token, voice, log: process.env.BRIDGE_LOG === '1'
+  ? message => console.error(`${new Date().toISOString()} [bridge] ${message}`) : undefined});
 const stop = process.env.BRIDGE_WATCH === '0' ? () => {} : await watchSessions(
   process.env.CODEX_SESSIONS_DIR ?? path.join(process.env.CODEX_HOME ?? path.join(os.homedir(), '.codex'), 'sessions'),
   event => bridge.publish(event));
