@@ -9,4 +9,7 @@ void pet_model_event(pet_model *m, pet_state state);
 int pet_model_tick(pet_model *m, uint32_t now);
 // WHP2: blend indexed RGB565 + 8-bit alpha PackBits planes over prefilled dst.
 int pet_frame_decode(const uint8_t *src, size_t size, const uint8_t *palette, uint16_t *dst, size_t pixels);
+int pet_frame_decode_scaled(const uint8_t *src,size_t size,const uint8_t *palette,
+                            uint16_t *dst,size_t width,size_t height,
+                            size_t out_width,size_t out_height,size_t stride);
 #endif

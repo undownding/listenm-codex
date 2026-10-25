@@ -12,4 +12,8 @@ int pet_overlay_frame(int click,size_t palette,size_t begin,size_t end,uint16_t 
 unsigned pet_overlay_extra_open(const char *name);
 void pet_overlay_extra_close(void);
 int pet_overlay_extra_frame(unsigned index,uint16_t *pixels);
+/* Enlarge existing 208x196 assets into a 224x211 viewport at (8,0).
+ * The 240x240 screen is prefilled with the backdrop; failures are atomic. */
+int pet_overlay_screen_frame(int click,size_t palette,size_t begin,size_t end,uint16_t *screen);
+int pet_overlay_extra_screen_frame(unsigned index,uint16_t *screen);
 #endif

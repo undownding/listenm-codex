@@ -147,10 +147,10 @@ static void render(void *force_error) {
     uint8_t *extra=NULL;
     uint16_t *background=NULL;
     uint8_t *font=NULL; size_t font_size=0;
-    uint16_t *screen=lisa_mem_alloc(240*240*2), *sprite=lisa_mem_alloc(WHALE_WIDTH*WHALE_HEIGHT*2);
+    uint16_t *screen=lisa_mem_alloc(240*240*2);
     if(!screen || display_init(&display)) goto fail;
     display_ready=1;
-    if(force_error || !sprite) goto fail;
+    if(force_error) goto fail;
     size_t click_size=0;
     for(unsigned i=0;i<sizeof(click_assets)/sizeof(click_assets[0]);i++)
         if(click_assets[i].offset+click_assets[i].size>click_size) click_size=click_assets[i].offset+click_assets[i].size;
@@ -195,29 +195,26 @@ static void render(void *force_error) {
             else { extra=loaded; extra_frame=0; printf("[pet-ui] extra playing\n"); }
         }
         memcpy(screen,backdrop,240*240*2);
-        for(unsigned y=0;y<WHALE_HEIGHT;y++) memcpy(sprite+y*WHALE_WIDTH,backdrop+(y+23)*240+16,WHALE_WIDTH*2);
         const whale_clip *clip=&whale_clips[buffering?PET_IDLE:state];
         uint32_t begin=clip->frames[frame],end=clip->frames[frame+1];
         if(interaction) {
             if(!click_assets[interaction-1].size) {
                 const whale_clip *wave=&whale_clips[PET_SPEAKING];
                 begin=wave->frames[interaction_frame]; end=wave->frames[interaction_frame+1];
-                if(pet_overlay_frame(0,wave->palette,begin,end,sprite)) goto fail;
+                if(pet_overlay_screen_frame(0,wave->palette,begin,end,screen)) goto fail;
             } else {
                 unsigned i=(unsigned)interaction-1;
                 size_t base=click_bases[i];
                 begin=click_offsets[i][interaction_frame]; end=click_offsets[i][interaction_frame+1];
-                if(pet_overlay_frame(1,base,base+begin,base+end,sprite)) goto fail;
+                if(pet_overlay_screen_frame(1,base,base+begin,base+end,screen)) goto fail;
             }
         } else if(extra) {
-            if(pet_overlay_extra_frame(extra_frame,sprite)) {
+            if(pet_overlay_extra_screen_frame(extra_frame,screen)) {
                 pet_overlay_extra_close(); lisa_mem_free(extra); extra=NULL; continue;
             }
-        } else if(pet_overlay_frame(0,clip->palette,begin,end,sprite)) goto fail;
-        for(unsigned y=0;y<WHALE_HEIGHT;y++) memcpy(screen+(y+23)*240+16,sprite+y*WHALE_WIDTH,WHALE_WIDTH*2);
+        } else if(pet_overlay_screen_frame(0,clip->palette,begin,end,screen)) goto fail;
         unsigned label=capturing?PET_TEXT_LISTENING:interaction?PET_TEXT_CLICK:extra?PET_TEXT_EXTRA:
             buffering?PET_IDLE:connected?(unsigned)state:PET_TEXT_OFFLINE;
-        pet_text_draw(font,font_size,PET_TEXT_BRAND,screen,PET_TEXT_TOP);
         pet_text_draw(font,font_size,label,screen,PET_TEXT_BOTTOM);
         if(capturing) {
             /* Live amplitude with a quiet breathing motion while waiting for speech. */
@@ -251,7 +248,7 @@ fail:
     lisa_mem_free(click_offsets); click_offsets=NULL;
     lisa_mem_free(font);
     if(background) lisa_mem_free(background);
-    if(screen) lisa_mem_free(screen); if(sprite) lisa_mem_free(sprite);
+    if(screen) lisa_mem_free(screen);
     vTaskDelete(NULL);
 }
 int pet_ui_init(void) {

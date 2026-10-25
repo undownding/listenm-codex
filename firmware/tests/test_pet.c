@@ -36,6 +36,21 @@ int main(int argc,char **argv) {
     assert(!pet_frame_decode(rgba,sizeof(rgba),palette,blend,3));
     assert(blend[0]==0x1234 && blend[1]==0xffff && blend[2]==0x8410);
     assert(pet_frame_decode(rgba,sizeof(rgba)-1,palette,blend,3)==-1);
+    // Scaling blends against each destination pixel and preserves the margins.
+    uint16_t enlarged[18];
+    for(unsigned i=0;i<18;i++) enlarged[i]=(uint16_t)i;
+    assert(!pet_frame_decode_scaled(rgba,sizeof(rgba),palette,enlarged+1,3,1,6,2,9));
+    for(unsigned y=0;y<2;y++) {
+        unsigned row=y*9;
+        assert(enlarged[row]==row && enlarged[row+7]==row+7 && enlarged[row+8]==row+8);
+        assert(enlarged[row+1]==row+1 && enlarged[row+2]==row+2);
+        assert(enlarged[row+3]==0xffff && enlarged[row+4]==0xffff);
+        for(unsigned x=5;x<7;x++) {
+            uint16_t expected[]={0,0,(uint16_t)(row+x)};
+            assert(!pet_frame_decode(rgba,sizeof(rgba),palette,expected,3));
+            assert(enlarged[row+x]==expected[2]);
+        }
+    }
     rgba[0]=255; assert(pet_frame_decode(rgba,sizeof(rgba),palette,blend,3)==-1);
     unsigned char bad[]={255,0};
     assert(pet_frame_decode(bad,sizeof(bad),blob,pixels,1)==-1);

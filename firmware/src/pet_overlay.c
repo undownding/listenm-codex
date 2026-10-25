@@ -66,7 +66,7 @@ void pet_overlay_init(size_t whale_size,size_t click_size) {
         else printf("[overlay] TF %s\n",names[i]);
     }
     if(active[1] || active[2]) {
-        frame=lisa_mem_alloc(FRAME_LIMIT); scratch=lisa_mem_alloc(PIXELS*2);
+        frame=lisa_mem_alloc(FRAME_LIMIT); scratch=lisa_mem_alloc(240*240*2);
         if(!frame || !scratch) {
             for(unsigned i=1;i<3;i++) { close_file(i); active[i]=0; }
             lisa_mem_free(frame); frame=NULL; lisa_mem_free(scratch); scratch=NULL;
@@ -78,14 +78,18 @@ int pet_overlay_background(uint16_t *pixels) {
     close_file(0); active[0]=0;
     return result;
 }
-static int decode_file(unsigned i,size_t palette,size_t begin,size_t end,uint16_t *pixels) {
+static int decode_file(unsigned i,size_t palette,size_t begin,size_t end,uint16_t *pixels,int screen) {
     if(!active[i]) return -1;
     if(begin>=end || end>lengths[i] || end-begin>FRAME_LIMIT ||
        palette>lengths[i] || lengths[i]-palette<512 ||
        read_at(i,palette,palette_data,512) || read_at(i,begin,frame,end-begin)) goto fail;
-    memcpy(scratch,pixels,PIXELS*2);
-    if(pet_frame_decode(frame,end-begin,palette_data,scratch,PIXELS)) goto fail;
-    memcpy(pixels,scratch,PIXELS*2);
+    size_t bytes=(screen?240*240:PIXELS)*2;
+    memcpy(scratch,pixels,bytes);
+    int result=screen?
+        pet_frame_decode_scaled(frame,end-begin,palette_data,scratch+8,208,196,224,211,240):
+        pet_frame_decode(frame,end-begin,palette_data,scratch,PIXELS);
+    if(result) goto fail;
+    memcpy(pixels,scratch,bytes);
     return 0;
 fail:
     printf("[overlay] %s invalid/read failed; stopping animation\n",i==3?"extra":i==2?"click.bin":"whale.bin");
@@ -98,7 +102,7 @@ int pet_overlay_read_click(size_t offset,void *data,size_t size) {
 }
 
 int pet_overlay_frame(int click,size_t palette,size_t begin,size_t end,uint16_t *pixels) {
-    return decode_file(click?2:1,palette,begin,end,pixels);
+    return decode_file(click?2:1,palette,begin,end,pixels,0);
 }
 
 static uint32_t extra_offsets[601];
@@ -144,5 +148,13 @@ invalid:
 }
 int pet_overlay_extra_frame(unsigned index,uint16_t *pixels) {
     if(index>=extra_count) return -1;
-    return decode_file(3,extra_base,extra_base+extra_offsets[index],extra_base+extra_offsets[index+1],pixels);
+    return decode_file(3,extra_base,extra_base+extra_offsets[index],extra_base+extra_offsets[index+1],pixels,0);
+}
+
+int pet_overlay_screen_frame(int click,size_t palette,size_t begin,size_t end,uint16_t *screen) {
+    return decode_file(click?2:1,palette,begin,end,screen,1);
+}
+int pet_overlay_extra_screen_frame(unsigned index,uint16_t *screen) {
+    if(index>=extra_count) return -1;
+    return decode_file(3,extra_base,extra_base+extra_offsets[index],extra_base+extra_offsets[index+1],screen,1);
 }
