@@ -9,4 +9,7 @@ int pet_overlay_background(uint16_t *pixels);
 int pet_overlay_read_click(size_t offset,void *data,size_t size);
 /* Decode atomically: on failure pixels remain unchanged. */
 int pet_overlay_frame(int click,size_t palette,size_t begin,size_t end,uint16_t *pixels);
+unsigned pet_overlay_extra_open(const char *name);
+void pet_overlay_extra_close(void);
+int pet_overlay_extra_frame(unsigned index,uint16_t *pixels);
 #endif

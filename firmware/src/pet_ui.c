@@ -141,6 +141,7 @@ static int present(lisa_device_t *display,uint16_t *screen) {
     return lisa_display_write(display,0,0,&desc,screen);
 }
 static void render(void *force_error) {
+    unsigned extra_count=0;
     lisa_device_t *display=NULL;
     int display_ready=0;
     uint8_t *extra=NULL;
@@ -186,10 +187,11 @@ static void render(void *force_error) {
         }
         if(buffering && (uint32_t)(now-buffer_started)>=700) buffering=0;
         int idle=connected && !capturing && state==PET_IDLE && !interaction && !buffering;
-        if(extra && !idle) { lisa_mem_free(extra); extra=NULL; printf("[pet-ui] extra interrupted\n"); }
+        if(extra && !idle) { pet_overlay_extra_close(); lisa_mem_free(extra); extra=NULL; printf("[pet-ui] extra interrupted\n"); }
         uint8_t *loaded=pet_extra_take(idle && !extra,&extra_size);
         if(loaded) {
-            if(pet_pack_validate(loaded,extra_size)) lisa_mem_free(loaded);
+            extra_count=pet_overlay_extra_open((const char *)loaded);
+            if(!extra_count) lisa_mem_free(loaded);
             else { extra=loaded; extra_frame=0; printf("[pet-ui] extra playing\n"); }
         }
         memcpy(screen,backdrop,240*240*2);
@@ -208,10 +210,8 @@ static void render(void *force_error) {
                 if(pet_overlay_frame(1,base,base+begin,base+end,sprite)) goto fail;
             }
         } else if(extra) {
-            const uint8_t *base=extra+16+4*(pet_u32(extra+4)+1);
-            begin=pet_u32(extra+16+4*extra_frame); end=pet_u32(extra+20+4*extra_frame);
-            if(pet_frame_decode(base+begin,end-begin,base,sprite,WHALE_WIDTH*WHALE_HEIGHT)) {
-                lisa_mem_free(extra); extra=NULL; continue;
+            if(pet_overlay_extra_frame(extra_frame,sprite)) {
+                pet_overlay_extra_close(); lisa_mem_free(extra); extra=NULL; continue;
             }
         } else if(pet_overlay_frame(0,clip->palette,begin,end,sprite)) goto fail;
         for(unsigned y=0;y<WHALE_HEIGHT;y++) memcpy(screen+(y+23)*240+16,sprite+y*WHALE_WIDTH,WHALE_WIDTH*2);
@@ -229,7 +229,7 @@ static void render(void *force_error) {
             }
         }
         if(present(display,screen)) goto fail;
-        if(extra && (++extra_frame)>=pet_u32(extra+4)) { lisa_mem_free(extra); extra=NULL; printf("[pet-ui] extra finished\n"); }
+        if(extra && (++extra_frame)>=extra_count) { pet_overlay_extra_close(); lisa_mem_free(extra); extra=NULL; printf("[pet-ui] extra finished\n"); }
         if(interaction) {
             unsigned count=!click_assets[interaction-1].size?whale_clips[PET_SPEAKING].count:click_counts[interaction-1];
             if(++interaction_frame>=count) {

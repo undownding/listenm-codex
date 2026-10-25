@@ -84,8 +84,19 @@ LISEM_DATA_DIR="$PWD/artifacts/manual" .deps/Lisem/lisem-desktop
 `scripts/build-firmware.sh` 为统一入口；`scripts/build-voice.sh` 仅保留兼容别名。
 输出 `build/voice/listenm-voice-full.bin`，包含 SDK AP 和本项目 CP 程序。
 
-当前支持 Arcs-Mini / LS2684。三代 LS2663 的语音 AP/CP 内存布局尚未适配，
-构建脚本会明确拒绝 `PET_BOARD=arcs_mini3`，不提供无语音的替代版本。
+支持 Arcs-Mini / LS2684 和 Mini3 / LS2663，均包含语音。Mini3 使用独立的 AP/CP 内存布局和 USB ADB Recovery：
+
+```bash
+PET_BOARD=arcs_mini3 bash scripts/build-firmware.sh
+# 首次安装配套 Boot 后，以明确的设备序列号更新；不改 TF 或 Boot。
+python3 scripts/flash-mini3-adb.py --serial DEVICE_SERIAL
+```
+
+Mini3 输出 `build/voice-mini3/listenm-voice-full.bin`（供仿真器从偏移 0 加载）。
+实机按分区写入 Boot `0x0`、AP `0x40000`、CP `0x600000`，保留其他 Flash 区域。
+ADB 脚本自动进入 Recovery，逐个写入 AP/CP 并完整读回比较，再重启连接。
+设备已在配套 Recovery 时加 `--recovery`；TF 缺失不会阻止 USB 恢复。
+彩蛋动画从 TF 按帧读取，以适应 Mini3 的 8 MiB PSRAM。
 
 ## 配置和接口
 

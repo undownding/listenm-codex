@@ -1,1 +1,10 @@
 osource "$ARCS_BASE/Kconfig"
+
+config CP_FIRMWARE_COMPAT
+    bool "Include CP PSRAM contract for the Mini3 voice AP"
+    default y if BOARD_ARCS_MINI3
+
+config CP_FIRMWARE_COMPAT_OFFSET
+    hex
+    default 0x180
+    depends on CP_FIRMWARE_COMPAT

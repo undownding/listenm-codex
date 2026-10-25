@@ -7,6 +7,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <sys/stat.h>
+static void put_u32(uint8_t *p,uint32_t v) {
+    for(unsigned i=0;i<4;i++) p[i]=(uint8_t)(v>>(8*i));
+}
 static void write_file(const char *name,const void *data,size_t n) {
     FILE *f=fopen(name,"wb"); assert(f); assert(fwrite(data,1,n,f)==n); assert(!fclose(f));
 }
@@ -37,6 +41,26 @@ int main(int argc,char **argv) {
     assert(!pet_overlay_frame(1,0,begin,end,pixels)); assert(!memcmp(pixels,expected,sizeof(pixels)));
     assert(pet_overlay_frame(1,0,begin,n+1,pixels)==-1);
     assert(!memcmp(pixels,expected,sizeof(pixels)));
+    /* Stream a one-frame extra, preserving the same decode result. */
+    assert(!mkdir("extras",0700));
+    size_t packed_size=24+512+end-begin;
+    uint8_t *packed=calloc(1,packed_size); assert(packed);
+    memcpy(packed,"WHP2",4); put_u32(packed+4,1);
+    put_u32(packed+8,208); put_u32(packed+12,196);
+    put_u32(packed+16,512); put_u32(packed+20,512+end-begin);
+    memcpy(packed+24,blob,512); memcpy(packed+24+512,blob+begin,end-begin);
+    write_file("extras/test.bin",packed,packed_size);
+    assert(pet_overlay_extra_open("test")==1);
+    memset(pixels,0,sizeof(pixels)); assert(!pet_overlay_extra_frame(0,pixels));
+    assert(!memcmp(pixels,expected,sizeof(pixels)));
+    assert(pet_overlay_extra_frame(1,pixels)==-1);
+    pet_overlay_extra_close(); assert(pet_overlay_extra_frame(0,pixels)==-1);
+    assert(!pet_overlay_extra_open("../test"));
+    write_file("extras/test.bin",packed,packed_size-1);
+    assert(!pet_overlay_extra_open("test"));
+    put_u32(packed+20,511); write_file("extras/test.bin",packed,packed_size);
+    assert(!pet_overlay_extra_open("test"));
+    free(packed); unlink("extras/test.bin"); assert(!rmdir("extras"));
     pet_overlay_close();
     /* Malformed frame must not partially alter the destination. */
     memset(blob+begin,255,end-begin); write_file("whale.bin",blob,n);

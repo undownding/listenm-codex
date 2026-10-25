@@ -20,7 +20,10 @@
 
 ## 外部依赖
 
-ARCS Mini SDK、Lisem 和原始 WebM 仓库下载至被忽略的 `.deps/`，不纳入本仓库源码提交，使用时遵循各自许可。本项目未修改 SDK 或 Lisem 源码。
+ARCS Mini SDK、Lisem 和原始 WebM 仓库下载至被忽略的 `.deps/`，不纳入本仓库源码提交，使用时遵循各自许可。SDK 和 Lisem checkout 保持原样。Mini3 构建在 `build/mini3-boot-source` 中复制 SDK Boot，
+由 `scripts/prepare-mini3-boot.py` 对复制件及 SDK USB/ADB 源文件的复制件应用兼容修正；
+这些构建产物保留原文件许可证。修正涉及 ARCS 端点数量、中断使能、ADB 包长度、
+原始 Flash 路径与设备标识。`firmware/src/pet_usb.c` 使用 SDK 的 USB 接口与恢复标志 ABI。
 
 ## Chinese status font
 

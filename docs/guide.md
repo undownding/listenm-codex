@@ -41,14 +41,22 @@ python3 scripts/prepare-tf.py /你的/TF卡挂载目录
 Lisem 正式 CLI 禁止宿主回环访问，不能填 `127.0.0.1` 或以网关
 `192.0.2.1` 绕到回环服务。token 在 bridge 和固件之间必须一致。当前是明文 HTTP，适用于可信开发网络。
 
-构建产物：`build/voice/listenm-voice-full.bin`，包含 SDK AP（含启动程序）和 CP 应用，写入
+Arcs-Mini 构建产物：`build/voice/listenm-voice-full.bin`，包含 SDK AP（含启动程序）和 CP 应用，写入
 Flash 偏移 **0**。它是本项目的独立固件，不是原语音助手固件的增量更新，
 不要写到原项目的 `0x600000` 应用分区。
 
 上述偏移用于仿真器加载。实机首次写入后出现黑屏，尚未验证成功；
-当前整包会替换原厂 boot，且不包含 USB Recovery。再次更新可能需要 UART
+Arcs-Mini 整包会替换原厂 boot，且不包含 USB Recovery。再次更新可能需要 UART
 ROM 下载方式。不要把 ADB 的传输进度完成提示当作 Flash 写入成功，必须检查
 最终退出状态并读回校验。详见[排查记录](validation.md#实机首次烧录与仿真复查2026-10-22)。
+
+Mini3 使用 `PET_BOARD=arcs_mini3 bash scripts/build-firmware.sh`，输出
+`build/voice-mini3/listenm-voice-full.bin`。它包含配套 USB Recovery Boot，
+与上述 Mini 的分区布局不同：Boot `0x0`、AP `0x40000`、CP `0x600000`。
+整包仅用于仿真器；实机应按分区写入，避免覆盖原有配置区域。
+首次安装配套 Boot 后，运行 `python3 scripts/flash-mini3-adb.py --serial SERIAL`
+即可更新 AP/CP，脚本在完整读回一致后才重启。已经进入配套 Recovery 时加
+`--recovery`。没有 TF 卡时也会启动 ADB；配置与动画仍需之后在 TF 上准备。
 
 终端一启动 bridge，默认观察已有 Codex Desktop / CLI 会话的新事件：
 

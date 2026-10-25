@@ -16,6 +16,9 @@
 #include "pet_storage.h"
 
 #include "pet_voice.h"
+#include <board.h>
+#include <lisa_device.h>
+#include <lisa_gpio.h>
 
 #define WIFI_READY 1
 #define IP_READY 2
@@ -33,6 +36,7 @@ static void dhcp(int vif, bool success, uint32_t ip, uint32_t mask, uint32_t gw,
 static void connection(wifi_mgr_connection_info_t *info, void *arg) {
     (void)arg;
     if (info->status == WIFI_MGR_STA_CONNECTED) {
+        printf("[pet] Wi-Fi associated; starting DHCP\n");
         net_if_up(net_if_get(WIFI_VIF_STA_IDX)); ls_dhcpc_start(WIFI_VIF_STA_IDX);
     } else if (info->status == WIFI_MGR_STA_DISCONNECTED) {
         xEventGroupClearBits(network, IP_READY);
@@ -41,6 +45,15 @@ static void connection(wifi_mgr_connection_info_t *info, void *arg) {
 }
 int main(int argc, char **argv) {
     (void)argc; (void)argv;
+    lisa_device_t *power=lisa_device_get("gpiob");
+    if(!power || lisa_gpio_configure(power,POWER_EN_PIN,LISA_GPIO_CONFIG_OUTPUT_HIGH)) {
+        printf("[pet] power hold initialization failed\n");
+        return -1;
+    }
+#if CONFIG_BOARD_ARCS_MINI3
+    extern int pet_usb_init(void);
+    if(pet_usb_init()) return -1;
+#endif
     printf("[pet] listenm receiver boot\n");
     if (pet_storage_init() || pet_config_load()) {
         printf("[pet] TF/config.ini missing or invalid; startup stopped\n");

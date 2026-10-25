@@ -139,3 +139,50 @@ artifacts/overlay-tools/bin/python scripts/verify-overlay.py
 
 固件交叉编译及全部项目测试通过，C 测试新增 overlay 后为 5 项，覆盖 TF
 优先、缺失/截断文件、动画边界检查、损坏帧不污染回退像素。未验证实体 TF 卡性能或热插拔。
+
+## Mini3 语音与 ADB 适配（2026-10-25）
+
+Mini3 / LS2663 已使用配套 Boot、SDK Mini3 AP 和本项目 CP 完成仿真验收。
+Boot 位于 `0x0`，AP 位于 `0x40000`，CP 位于 `0x600000`；AP/CP 分别使用
+3 MiB / 5 MiB PSRAM。CP 兼容头声明该内存布局，并启用与 AP 一致的 IPC 区，
+共享锁地址为 `0x20040e00`。省略 IPC 区会使 Wi-Fi 在关联后死锁。
+
+验收命令：`PET_BOARD=arcs_mini3 python scripts/verify-lisem.py`（Python 环境需有
+Pillow、pyfatfs）。测试使用单独的虚拟 TF 和合成 Codex 记录，未修改实体 TF。
+本次结果在 `artifacts/lisem-e2e-76xly2qr/result.json`，包含：
+
+- TF 模型加载、语音唤醒引擎初始化、Wi-Fi DHCP 与 SSE 连接。
+- 七种状态的非空画面与连续动画帧。
+- 节日彩蛋播放、Codex 事件打断、游戏动画完整结束。
+- bridge 重启后的历史重置、自动重连和后续事件。
+
+Mini3 的彩蛋改为按帧读取 TF，避免把最高约 1.7 MB 的动画整包放入内存。
+主机测试覆盖同帧解码一致、非法文件名、截断文件、索引越界和关闭后的读取失败。
+`bash scripts/test.sh` 全部通过；Mini 和 Mini3 均已重新构建。
+
+USB 验收使用真实固件的 USB 协议，通过 Lisem 的 TCP USB 桥接运行 ADB。
+已验证无 TF 时应用 ADB 在线、`adb reboot recovery`、AP/CP 写入、全部内容读回
+逐字节相同，以及 Boot 重启后应用重新连接。另验证过 AP 头无效时自动进入恢复模式。
+最终更新脚本为 `scripts/flash-mini3-adb.py`，要求明确 serial、Mini3 设备标识与
+16 MiB Flash，并校验 CP 内存兼容头。只更新 AP/CP；Boot 和其他区域保持原样。
+日志在 `artifacts/mini3-flash/adb-updater-test.log`。
+
+这些结果不代表实体设备已刷入，也不包含真人唤醒词准确率或实体麦克风/扬声器验证。
+首次安装配套 Boot 仍需实体设备处于可用下载模式；后续应用升级可使用 ADB。
+
+### 本次实体写入
+
+随后在 `/dev/ttyUSB0` 以 230400 baud 写入同一组已验收镜像，工具退出码为 0。
+三个分区的设备端 MD5 均与本地一致：
+
+| 分区 | 地址 | 字节数 | MD5 |
+| --- | --- | --- | --- |
+| AP | `0x40000` | 427868 | `b292ac77f1629b41e0733822a3d738b1` |
+| CP | `0x600000` | 1277556 | `9f53529c7254c7407ee8d411079e7f32` |
+| Recovery Boot | `0x0` | 133560 | `dc35990801e5528c6b43e9ddfd4e5109` |
+
+日志：`artifacts/mini3-flash/physical-flash.log`；SHA-256 清单：
+`artifacts/mini3-flash/validated-manifest.json`。未整片擦除，也未修改实体 TF。
+写入完成时电脑尚未枚举出板子 ADB；实体正常启动与 USB 连接验证另行记录。
+
+用户随后反馈实体测试成功。该结论为用户实测反馈；本次未另外采集实机启动或 ADB 日志。

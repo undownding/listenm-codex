@@ -11,6 +11,10 @@ import urllib.request
 from PIL import Image, ImageChops
 
 ROOT = Path(__file__).resolve().parents[1]
+board = os.environ.get('PET_BOARD', 'arcs_mini')
+if board not in ('arcs_mini', 'arcs_mini3'):
+    raise SystemExit('Unsupported PET_BOARD: '+board)
+build_dir = 'voice-mini3' if board == 'arcs_mini3' else 'voice'
 CLI = Path(os.environ.get('LISEM_BIN', ROOT / '.deps/Lisem/lisem'))
 from tf_image import create_card
 host = os.environ.get('PET_TEST_HOST', '172.17.0.1')
@@ -73,8 +77,8 @@ def append(kind, subtype, **fields):
         stream.write(json.dumps({'type':kind,'payload':{'type':subtype, **fields}})+'\n')
 try:
     bridge = start_bridge()
-    instance = json.loads(cli('create','--board','arcs-mini','--name','listenm-e2e'))['id']
-    cli('write',instance,str(ROOT/'build/voice/listenm-voice-full.bin'))
+    instance = json.loads(cli('create','--board',board.replace('_','-'),'--name','listenm-e2e'))['id']
+    cli('write',instance,str(ROOT/'build'/build_dir/'listenm-voice-full.bin'))
     cli('sd-card',instance,'--image',str(create_card(work,host,port,token)))
     cli('start',instance,'--network','--seconds','360','--timeout','480')
     wait_for(lambda text:'[pet] SSE connected' in text)

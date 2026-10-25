@@ -9,7 +9,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#define LIMIT 1750000
 static int enabled;
 static unsigned generation;
 static uint8_t *pending;
@@ -55,9 +54,9 @@ static uint8_t *fetch(size_t *length) {
     name[size]=0;
     for(size_t i=0;i<size;i++)
         if(!((name[i]>='a' && name[i]<='z') || (name[i]>='0' && name[i]<='9') || name[i]=='_')) goto done;
-    char path[96]; snprintf(path,sizeof(path),"extras/%s.bin",name);
-    data=pet_storage_load(path,LIMIT,length);
-    if(data) printf("[pet-ui] extra TF=%s bytes=%u\n",name,(unsigned)*length);
+    /* Pass only the validated name; the render task streams frames from TF. */
+    data=lisa_mem_alloc(size+1);
+    if(data) { memcpy(data,name,size+1); *length=size; }
 
 done:
     closesocket(fd); return data;

@@ -3,6 +3,6 @@
 #include <stddef.h>
 #include <stdint.h>
 int pet_extra_init(void);
-/* Called only by renderer. Ownership of returned allocation transfers to it. */
+/* Renderer takes ownership of a validated, NUL-terminated TF extra name. */
 uint8_t *pet_extra_take(int enabled, size_t *size);
 #endif
